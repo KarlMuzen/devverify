@@ -9,32 +9,35 @@ class MemoryFs {
 
   readonly adapter: FsAdapter = {
     mkdir: async () => {},
-    readFile: async (path) => {
+    readFile: (path) => {
       const value = this.files.get(path);
       if (value === undefined) {
         const error = new Error('missing');
         Object.assign(error, { code: 'ENOENT' });
         throw error;
       }
-      return value;
+      return Promise.resolve(value);
     },
-    writeFile: async (path, data) => {
+    writeFile: (path, data) => {
       this.writeCount += 1;
       if (this.failWriteAt === this.writeCount) {
         throw new Error('simulated write failure');
       }
       this.files.set(path, data);
+      return Promise.resolve();
     },
-    rename: async (from, to) => {
+    rename: (from, to) => {
       const value = this.files.get(from);
       if (value === undefined) {
         throw new Error('missing temp file');
       }
       this.files.set(to, value);
       this.files.delete(from);
+      return Promise.resolve();
     },
-    unlink: async (path) => {
+    unlink: (path) => {
       this.files.delete(path);
+      return Promise.resolve();
     },
   };
 }
