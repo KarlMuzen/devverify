@@ -67,8 +67,6 @@ export interface LoadedSource {
   snapshot: SourceSnapshot;
 }
 
-
-
 export interface MutableCrawlData {
   apps: AppRecord[];
   events: EventRecord[];
