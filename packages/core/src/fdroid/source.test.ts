@@ -122,14 +122,14 @@ describe('createFdroidSource', () => {
     });
   });
 
-  it('rejects invalid JSON as SourceFetchError', async () => {
+  it('rejects invalid JSON as SourceFormatError', async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
       jsonResponse('not-json'),
     );
     const source = createFdroidSource({ url: FDROID_SIGNER_INDEX_URL });
 
     await expect(source.load({ fetch: fetcher })).rejects.toBeInstanceOf(
-      SourceFetchError,
+      SourceFormatError,
     );
   });
 
