@@ -51,7 +51,8 @@ describe('dataset serialization', () => {
   });
 
   it('reports the line number for malformed NDJSON', () => {
-    expect(() => parseAppsNdjson('{}\nnot-json\n')).toThrow(
+    const validLine = JSON.stringify(appA);
+    expect(() => parseAppsNdjson(validLine + '\nnot-json\n')).toThrow(
       'apps.ndjson line 2 is not valid JSON.',
     );
   });
