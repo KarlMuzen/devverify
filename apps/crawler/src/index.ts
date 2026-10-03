@@ -115,6 +115,14 @@ export async function main(
     };
 
     const result = await runCrawl(options);
+    const earlyQuotaWarning = result.warnings.find(
+      (warning) =>
+        result.exitReason === 'quota_exhausted' &&
+        warning.includes('before half of the configured budget'),
+    );
+    if (earlyQuotaWarning !== undefined) {
+      process.stderr.write('::warning::' + earlyQuotaWarning + '\n');
+    }
     process.stdout.write(resultJson(result) + '\n');
     return result.exitCode;
   } catch (error) {
