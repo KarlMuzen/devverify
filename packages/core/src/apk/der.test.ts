@@ -36,9 +36,10 @@ describe('minimal DER reader', () => {
   });
 
   it('accepts long-form definite lengths and high-tag numbers', () => {
-    const bytes = new Uint8Array([0x3f, 0x20, 0x01, 0x00]);
-    expect(parseDer(bytes).tagNumber).toBe(0);
+    const highTag = new Uint8Array([0x3f, 0x20, 0x01, 0x00]);
+    expect(parseDer(highTag).tagNumber).toBe(32);
     expect(() => parseDer(new Uint8Array([0x3f, 0x81, 0x01, 0x00]))).not.toThrow();
+    expect(() => parseDer(new Uint8Array([0x02, 0x82, 0x00, 0x80]))).toThrow();
   });
 
   it('rejects indefinite lengths', () => {
