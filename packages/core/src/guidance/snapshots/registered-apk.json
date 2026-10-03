@@ -1,0 +1,19 @@
+{
+  "title": "Package registered for the checked signing key",
+  "summary": "The checked signing key is registered for com.example.test.",
+  "steps": [
+    "Compare AA:BB with the certificate fingerprint used by this build.",
+    "Re-check the package and certificate pair when the signing key changes.",
+    "Use the Android developer verification guides to review package and key registration details."
+  ],
+  "links": [
+    {
+      "label": "Check registration status",
+      "url": "https://developer.android.com/developer-verification/guides/check-registration-status"
+    },
+    {
+      "label": "Android developer verification overview",
+      "url": "https://developer.android.com/developer-verification"
+    }
+  ]
+}

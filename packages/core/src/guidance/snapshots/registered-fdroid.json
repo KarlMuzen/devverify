@@ -1,0 +1,20 @@
+{
+  "title": "Package registered for the checked signing key",
+  "summary": "The checked signing key is registered for com.example.test; for an F-Droid APK, confirm that the distributed build uses the same registered key.",
+  "steps": [
+    "Compare AA:BB with the certificate fingerprint of the F-Droid build you checked.",
+    "If F-Droid signs the distributed APK with its own key, register that signing key for the package as well.",
+    "Re-check the package and certificate pair when the signing key changes.",
+    "Use the Android developer verification guides to review package and key registration details."
+  ],
+  "links": [
+    {
+      "label": "Check registration status",
+      "url": "https://developer.android.com/developer-verification/guides/check-registration-status"
+    },
+    {
+      "label": "Android developer verification overview",
+      "url": "https://developer.android.com/developer-verification"
+    }
+  ]
+}
