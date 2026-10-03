@@ -115,7 +115,7 @@ export function createVirtualSource(
         );
       }
 
-      return result;
+      return Promise.resolve(result);
     },
   };
 }
