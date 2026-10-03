@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { SourceFormatError } from '../source.js';
 import { parseSignerIndex } from './signer-index.js';
 
-const FIXTURE_ROOT = new URL('../../../../../fixtures/fdroid/', import.meta.url);
+const FIXTURE_ROOT = new URL('../../../../fixtures/fdroid/', import.meta.url);
 
 async function fixture(name: string): Promise<unknown> {
   const text = await readFile(new URL(name, FIXTURE_ROOT), 'utf8');
