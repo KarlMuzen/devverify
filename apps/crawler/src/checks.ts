@@ -8,7 +8,6 @@ import {
   createFakeStatusClient,
   createStatusClient,
   type AppRecord,
-  type MutableCrawlData,
   type RequestBudget,
   type StatusCheckResult,
   type StatusClient,
@@ -16,6 +15,7 @@ import {
 import type {
   CrawlExitReason,
   CrawlOptions,
+  MutableCrawlData,
   PackageOutcome,
 } from './types.js';
 import { countStatuses, safeError } from './source.js';
