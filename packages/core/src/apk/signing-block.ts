@@ -3,7 +3,7 @@ import { ApkParseError } from './source.js';
 import { findEocd } from './eocd.js';
 import { parseSchemeValue } from './scheme-parser.js';
 import { Cursor, readId } from './signing-cursor.js';
-import { MAX_SIGNERS } from './signing-limits.js';
+import { MAX_SIGNERS, MAX_SIGNING_BLOCK_BYTES } from './signing-limits.js';
 import type { ApkSigner as ApkSignerType, ApkSignerScheme } from './signing-block-types.js';
 
 export const APK_SIG_BLOCK_MAGIC = new TextEncoder().encode('APK Sig Block 42');
