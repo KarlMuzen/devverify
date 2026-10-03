@@ -38,8 +38,8 @@ describe('createLimiter', () => {
     const limit = createLimiter(1);
     const error = new Error('expected');
 
-    await expect(limit(async () => Promise.reject(error))).rejects.toBe(error);
-    await expect(limit(async () => 'ok')).resolves.toBe('ok');
+    await expect(limit(() => Promise.reject(error))).rejects.toBe(error);
+    await expect(limit(() => Promise.resolve('ok'))).resolves.toBe('ok');
   });
 
   it('rejects invalid concurrency', () => {
