@@ -94,7 +94,9 @@ export async function readEntry(
     );
   }
 
-  const compressed = new Blob([data]).stream();
+  const exactBuffer = new ArrayBuffer(data.byteLength);
+  new Uint8Array(exactBuffer).set(data);
+  const compressed = new Blob([exactBuffer]).stream();
   const inflated = await readInflated(
     compressed.pipeThrough(new DecompressionStream('deflate-raw')),
   );
