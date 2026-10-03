@@ -14,5 +14,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "build": "tsup src/index.ts --format esm --dts --out-dir dist"
+  },
+  "dependencies": {
+    "@devverify/core": "workspace:*"
   }
 }
