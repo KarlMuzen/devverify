@@ -66,4 +66,3 @@ export interface LoadedSource {
   snapshot: SourceSnapshot;
 }
 
-export type CrawlData = DataSet;
