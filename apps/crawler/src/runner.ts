@@ -45,13 +45,7 @@ export async function runCrawl(
   try {
     now = normalizeNow(options.now);
   } catch (error) {
-    return failureResult(
-      40,
-      'schema_error',
-      options.budget,
-      [],
-      safeError(error, options.apiKey).message,
-    );
+    return failureResult(40, 'schema_error', options.budget, [], safeError(error, options.apiKey).message);
   }
 
   const store = createDataStore(options.dataDir);
@@ -72,13 +66,7 @@ export async function runCrawl(
   try {
     sourceSnapshot = await loadSource(options, data, now);
   } catch (error) {
-    return failureResult(
-      30,
-      'source_fetch_failed',
-      options.budget,
-      data.apps,
-      safeError(error, options.apiKey).message,
-    );
+    return failureResult(30, 'source_fetch_failed', options.budget, data.apps, safeError(error, options.apiKey).message);
   }
 
   const { source, snapshot } = sourceSnapshot;
@@ -108,13 +96,7 @@ export async function runCrawl(
       budget: options.budget,
     });
   } catch (error) {
-    return failureResult(
-      40,
-      'schema_error',
-      options.budget,
-      data.apps,
-      safeError(error, options.apiKey).message,
-    );
+    return failureResult(40, 'schema_error', options.budget, data.apps, safeError(error, options.apiKey).message);
   }
 
   const recordByPackage = new Map(
@@ -138,13 +120,7 @@ export async function runCrawl(
       },
     );
   } catch (error) {
-    return failureResult(
-      1,
-      'configuration_error',
-      options.budget,
-      data.apps,
-      safeError(error, options.apiKey).message,
-    );
+    return failureResult(1, 'configuration_error', options.budget, data.apps, safeError(error, options.apiKey).message);
   }
 
   const outcomes = await Promise.all(
