@@ -43,23 +43,15 @@ describe('minimal DER reader', () => {
   });
 
   it('rejects indefinite lengths', () => {
-    expect(() => parseDer(hex('30800201010000'))).toThrowError(
-      expect.objectContaining({ code: 'APK_DER_INDEFINITE_LENGTH' }),
-    );
+    expectErrorCode(() => parseDer(hex('30800201010000')), 'APK_DER_INDEFINITE_LENGTH');
   });
 
   it('rejects truncated values and non-minimal lengths', () => {
     expect(() => parseDer(hex('3003020101'))).not.toThrow();
     expect(() => parseDer(hex('3004020101'))).toThrowError(ApkParseError);
-    expect(() => parseDer(hex('30810100'))).toThrowError(
-      expect.objectContaining({ code: 'APK_DER_NON_MINIMAL_LENGTH' }),
-    );
-    expect(() => parseDer(hex('1f'))).toThrowError(
-      expect.objectContaining({ code: 'APK_DER_TRUNCATED' }),
-    );
-    expect(() => parseDer(hex('1f1f00'))).toThrowError(
-      expect.objectContaining({ code: 'APK_DER_NON_MINIMAL_TAG' }),
-    );
+    expectErrorCode(() => parseDer(hex('30810100')), 'APK_DER_NON_MINIMAL_LENGTH');
+    expectErrorCode(() => parseDer(hex('1f')), 'APK_DER_TRUNCATED');
+    expectErrorCode(() => parseDer(hex('1f1f00')), 'APK_DER_NON_MINIMAL_TAG');
   });
 
   it('rejects invalid helper values and non-minimal integers', () => {
@@ -81,11 +73,21 @@ describe('minimal DER reader', () => {
       bytes = wrapped;
     }
 
-    expect(() => parseDer(bytes)).toThrowError(
-      expect.objectContaining({ code: 'APK_DER_DEPTH' }),
-    );
-    expect(() => parseDer(new Uint8Array([0x02, 0x01, 0x01, 0x00]))).toThrowError(
-      expect.objectContaining({ code: 'APK_DER_TRAILING' }),
-    );
+    expectErrorCode(() => parseDer(bytes), 'APK_DER_DEPTH');
+    expectErrorCode(() => parseDer(new Uint8Array([0x02, 0x01, 0x01, 0x00])), 'APK_DER_TRAILING');
   });
 });
+
+function expectErrorCode(action: () => unknown, code: string): void {
+  let caught = false;
+  try {
+    action();
+  } catch (error) {
+    caught = true;
+    expect(error).toBeInstanceOf(ApkParseError);
+    if (error instanceof ApkParseError) {
+      expect(error.code).toBe(code);
+    }
+  }
+  if (!caught) throw new Error(`Expected ${code}.`);
+}

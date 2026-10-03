@@ -68,8 +68,9 @@ describe('APK v1/JAR signatures', () => {
   });
 
   it('rejects a signature file over 1 MiB before parsing', () => {
-    expect(() => parseV1Signature(new Uint8Array(MAX_V1_SIGNATURE_BYTES + 1))).toThrowError(
-      expect.objectContaining({ code: 'APK_V1_SIGNATURE_LIMIT' }),
+    expectErrorCode(
+      () => parseV1Signature(new Uint8Array(MAX_V1_SIGNATURE_BYTES + 1)),
+      'APK_V1_SIGNATURE_LIMIT',
     );
   });
 
@@ -115,4 +116,19 @@ function extractSerial(certificate: Uint8Array): Uint8Array {
   const version = fields[0];
   const serialIndex = version !== undefined && version.tagClass === 2 ? 1 : 0;
   return readInteger(fields[serialIndex] ?? parsed).slice();
+}
+
+
+function expectErrorCode(action: () => unknown, code: string): void {
+  let caught = false;
+  try {
+    action();
+  } catch (error) {
+    caught = true;
+    expect(error).toBeInstanceOf(ApkParseError);
+    if (error instanceof ApkParseError) {
+      expect(error.code).toBe(code);
+    }
+  }
+  if (!caught) throw new Error(`Expected ${code}.`);
 }
