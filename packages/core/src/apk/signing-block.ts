@@ -4,12 +4,6 @@ import { findEocd } from './eocd.js';
 import { parseSchemeValue } from './scheme-parser.js';
 import { Cursor, readId } from './signing-cursor.js';
 import { MAX_SIGNERS } from './signing-limits.js';
-import {
-  PROOF_OF_ROTATION_ATTRIBUTE_ID,
-  V2_BLOCK_ID,
-  V31_BLOCK_ID,
-  V3_BLOCK_ID,
-} from './signing-constants.js';
 import type { ApkSigner as ApkSignerType, ApkSignerScheme } from './signing-block-types.js';
 
 export const APK_SIG_BLOCK_MAGIC = new TextEncoder().encode('APK Sig Block 42');
