@@ -8,7 +8,7 @@ import {
   createFakeStatusClient,
   createStatusClient,
   type AppRecord,
-  type DataSet,
+  type MutableCrawlData,
   type RequestBudget,
   type StatusCheckResult,
   type StatusClient,
@@ -69,7 +69,7 @@ export async function processPackage(
 }
 
 export function appendLastRun(
-  data: DataSet,
+  data: MutableCrawlData,
   now: string,
   exitReason: CrawlExitReason,
   requestsUsed: number,
@@ -125,7 +125,7 @@ export function errorRecord(
 }
 
 
-export function replaceTimeseriesRow(data: DataSet, now: string): void {
+export function replaceTimeseriesRow(data: MutableCrawlData, now: string): void {
   const row = computeTimeseriesRow(data.apps, new Date(now));
   data.timeseries = [
     ...data.timeseries.filter((item) => item.date !== row.date),
