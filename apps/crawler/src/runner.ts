@@ -40,6 +40,7 @@ import { loadCrawlData } from './dataset.js';
 export const DEFAULT_BUDGET = 950;
 export const DEFAULT_CONCURRENCY = 4;
 export const DEFAULT_MAX_FINGERPRINTS = 2;
+
 export async function runCrawl(
   options: CrawlOptions,
 ): Promise<CrawlResult> {
