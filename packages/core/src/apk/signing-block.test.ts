@@ -62,11 +62,13 @@ describe('APK signing block parser', () => {
       entries: [{ name: 'classes.dex', data: new Uint8Array([1]) }],
       signers: [{ scheme: 'v2', certificate: await certificate('v2') }],
     });
-    const eocd = await findEocd(createBufferSource(apk));
+    const source = createBufferSource(apk);
+    const eocd = await findEocd(source);
+    const block = await readSigningBlock(source, eocd.centralDirectoryOffset);
     const broken = new Uint8Array(apk);
-    new DataView(broken.buffer).setUint32(eocd.centralDirectoryOffset - 8 - 24 + 8 + 8, 0x12345678, true);
+    const blockStart = eocd.centralDirectoryOffset - block.byteLength;
+    new DataView(broken.buffer).setUint32(blockStart + 16, 0x12345678, true);
     await expect(extractApkSigners(createBufferSource(broken))).resolves.toEqual([]);
-    void V2_BLOCK_ID;
   });
 
   it('rejects a signing block with mismatched size fields', async () => {
@@ -104,7 +106,8 @@ describe('APK signing block parser', () => {
     });
     const eocd = await findEocd(createBufferSource(apk));
     const broken = new Uint8Array(apk);
-    const pairLengthOffset = eocd.centralDirectoryOffset - 24 - 16;
+    const block = await readSigningBlock(createBufferSource(apk), eocd.centralDirectoryOffset);
+    const pairLengthOffset = eocd.centralDirectoryOffset - block.byteLength + 8;
     new DataView(broken.buffer).setBigUint64(pairLengthOffset, 0xffffffffffffffffn, true);
     await expect(extractApkSigners(createBufferSource(broken))).rejects.toMatchObject({
       code: 'APK_SIGNING_BLOCK_BOUNDS',
