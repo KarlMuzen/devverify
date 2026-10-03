@@ -39,13 +39,13 @@ function stateFor(seed: string, packageName: string): ApiState {
 
 export function createFakeStatusClient({ seed }: { seed: string }): FakeStatusClient {
   return {
-    async check(packageName, fingerprint) {
+    check(packageName, fingerprint) {
       const pkg = assertPackageName(packageName);
       const normalizedFingerprint =
         fingerprint === undefined ? undefined : normalizeFingerprint(fingerprint);
       const state = stateFor(seed, pkg);
 
-      return {
+      return Promise.resolve({
         package: pkg,
         ...(normalizedFingerprint === undefined
           ? {}
