@@ -47,3 +47,12 @@ export async function fileSource(path: string | URL): Promise<FileRandomAccessSo
     },
   };
 }
+
+export {
+  createDataStore,
+  DataStoreError,
+  type DataStore,
+  type FilePaths,
+  type FsAdapter,
+  type MetaMigration,
+} from './data/store.js';
