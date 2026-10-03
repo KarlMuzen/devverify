@@ -102,3 +102,15 @@ export {
   type CombinedSigner,
   type CombinedSigners,
 } from './apk/index.js';
+
+export {
+  en,
+  getGuidance,
+  t,
+  type Guidance,
+  type GuidanceContext,
+  type GuidanceKey,
+  type GuidanceLink,
+  type GuidanceOrigin,
+  type GuidanceParams,
+} from './guidance/index.js';
