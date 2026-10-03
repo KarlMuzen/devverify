@@ -67,7 +67,9 @@ async function deflateRaw(data: Uint8Array): Promise<Uint8Array> {
   if (typeof CompressionStream !== 'function') {
     throw new Error('CompressionStream is unavailable.');
   }
-  const stream = new Blob([data]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+  const exactBuffer = new ArrayBuffer(data.byteLength);
+  new Uint8Array(exactBuffer).set(data);
+  const stream = new Blob([exactBuffer]).stream().pipeThrough(new CompressionStream('deflate-raw'));
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
