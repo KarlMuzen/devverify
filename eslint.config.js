@@ -9,11 +9,10 @@ export default tseslint.config(
     extends: tseslint.configs.recommendedTypeChecked,
     languageOptions: {
       parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
         projectService: {
           allowDefaultProject: ['vitest.workspace.ts'],
         },
+        tsconfigRootDir: import.meta.dirname,
       },
     },
   },
