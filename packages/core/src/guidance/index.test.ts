@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { en, getGuidance, t } from './index.js';
 import type { AppStatus } from '../status/types.js';
@@ -14,14 +15,16 @@ const cases = [
 ] as const satisfies readonly [AppStatus, 'apk' | 'fdroid'][];
 
 describe('guidance', () => {
-  it.each(cases)('snapshots %s/%s', (status, origin) => {
-    expect(
-      getGuidance(status, {
-        package: 'com.example.test',
-        fingerprint: 'AA:BB',
-        origin,
-      }),
-    ).toMatchSnapshot();
+  it.each(cases)('snapshots %s/%s', async (status, origin) => {
+    const guidance = getGuidance(status, {
+      package: 'com.example.test',
+      fingerprint: 'AA:BB',
+      origin,
+    });
+    const snapshotPath = fileURLToPath(
+      new URL(`./snapshots/${status}-${origin}.json`, import.meta.url),
+    );
+    await expect(`${JSON.stringify(guidance, null, 2)}\n`).toMatchFileSnapshot(snapshotPath);
   });
 
   it.each(cases)('does not require a fingerprint %s/%s', (status, origin) => {
