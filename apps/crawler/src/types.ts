@@ -1,6 +1,5 @@
 import type {
   AppRecord,
-  DataSet,
   EventRecord,
   PackageSource,
   SourceSnapshot,
