@@ -33,8 +33,9 @@ function certificateIdentity(node: DerNode): CertificateIdentity {
 
   const fields = readSequence(tbs, 'APK_V1_CERTIFICATE_INVALID');
   let index = 0;
-  if (fields[index] !== undefined && isContextSpecific(fields[index], 0, true)) {
-    index += 1;
+  const firstField = fields[0];
+  if (firstField !== undefined && isContextSpecific(firstField, 0, true)) {
+    index = 1;
   }
 
   const serialNode = fields[index];
@@ -129,11 +130,20 @@ function parseSignedData(bytes: Uint8Array): readonly Uint8Array[] {
     if (selected >= 0) break;
   }
 
-  const ordered = selected <= 0
-    ? certificates
-    : [certificates[selected], ...certificates.slice(0, selected), ...certificates.slice(selected + 1)];
+  if (selected <= 0) {
+    return certificates.map((certificate) => certificate.encoded);
+  }
 
-  return ordered.map((certificate) => certificate.encoded);
+  const selectedCertificate = certificates[selected];
+  if (selectedCertificate === undefined) {
+    throw new ApkParseError('APK_V1_CERTIFICATE_INVALID', 'Selected signer certificate is unavailable.');
+  }
+
+  return [
+    selectedCertificate,
+    ...certificates.slice(0, selected),
+    ...certificates.slice(selected + 1),
+  ].map((certificate) => certificate.encoded);
 }
 
 /**
