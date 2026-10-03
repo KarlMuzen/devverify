@@ -23,7 +23,8 @@ Legend: `[x]` completed in the repository; `[ ]` not completed.
 - [x] 2.1 Dataset schemas, deterministic storage, sample data
 - [x] 2.2 Sync, check-result application, scheduler (pure functions)
 - [x] 2.3 Crawler runner
-- [ ] 2.4 GitHub Actions: crawl workflow and data branch
+- [x] 2.4 GitHub Actions: crawl workflow and data branch
+- [ ] 2.4 TODO: enable the deploy job in .github/workflows/crawl.yml after task 3.6 creates deploy.yml
 - [ ] 2.5 Live verification kit
 
 ## Phase 3 — Site
