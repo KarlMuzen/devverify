@@ -87,7 +87,8 @@ function chunk(type: number, body: Uint8Array): Uint8Array {
 }
 
 function namespace(type: number, prefix: number, uri: number): Uint8Array {
-  return chunk(type, concat(u32(1), u32(0xffffffff), u32(prefix), u32(uri)));
+  const body = concat(u32(1), u32(0xffffffff), u32(prefix), u32(uri));
+  return concat(u16(type), u16(16), u32(24), body);
 }
 
 type AttrType = 'string' | 'int';
