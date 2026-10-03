@@ -1,23 +1,13 @@
 import {
-  AuthError,
-  BudgetExhaustedError,
-  QuotaExhaustedError,
   applyCheckError,
-  applyCheckResult,
-  checkFingerprints,
   computeTimeseriesRow,
   createDataStore,
-  createFakeStatusClient,
   createLimiter,
-  createStatusClient,
   RequestBudget,
   selectBatch,
   syncRecords,
   type AppRecord,
   type DataSet,
-  type EventRecord,
-  type StatusCheckResult,
-  type StatusClient,
 } from '@devverify/core';
 import {
   loadSource,
@@ -27,6 +17,14 @@ import {
   updateSourceMeta,
   countStatuses,
 } from './source.js';
+import {
+  appendLastRun,
+  createStatusClientForRun,
+  errorRecord,
+  isSpecialError,
+  processPackage,
+  specialFailure,
+} from './checks.js';
 import type {
   CrawlOptions,
   CrawlResult,
@@ -38,92 +36,6 @@ export const DEFAULT_BUDGET = 950;
 export const DEFAULT_CONCURRENCY = 4;
 export const DEFAULT_MAX_FINGERPRINTS = 2;
 export const DEFAULT_FAKE_SEED = 'devverify-crawler';
-
-function createStatusClientForRun(
-  options: CrawlOptions,
-  budget: RequestBudget,
-  onRequest: () => void,
-): StatusClient {
-  if (options.statusClient !== undefined) {
-    return options.statusClient;
-  }
-  if (options.fake) {
-    return createFakeStatusClient({ seed: DEFAULT_FAKE_SEED });
-  }
-  if (options.apiKey === undefined || options.apiKey.length === 0) {
-    throw new Error(
-      'ANDROID_DEVID_STATUS_API_KEY is required unless --fake is used.',
-    );
-  }
-  return createStatusClient({
-    apiKey: options.apiKey,
-    budget,
-    onRequest,
-  });
-}
-
-async function processPackage(
-  record: AppRecord,
-  statusClient: StatusClient,
-  maxFingerprints: number,
-  now: string,
-  onCheck: () => void,
-): Promise<PackageOutcome> {
-  const results: StatusCheckResult[] = [];
-  for (const fingerprint of checkFingerprints(record, maxFingerprints)) {
-    onCheck();
-    const result = await statusClient.check(record.package, fingerprint);
-    results.push(result);
-    if (result.state === 'REGISTERED') {
-      break;
-    }
-  }
-
-  const applied = applyCheckResult(record, results, now);
-  return {
-    package: record.package,
-    record: applied.record,
-    ...(applied.event === undefined ? {} : { event: applied.event }),
-  };
-}
-
-function replaceTimeseriesRow(data: DataSet, now: string): void {
-  const row = computeTimeseriesRow(data.apps, new Date(now));
-  data.timeseries = [
-    ...data.timeseries.filter((item) => item.date !== row.date),
-    row,
-  ].sort((a, b) => a.date.localeCompare(b.date));
-}
-
-function appendLastRun(
-  data: DataSet,
-  now: string,
-  exitReason: CrawlResult['exitReason'],
-  requestsUsed: number,
-  budget: number,
-  added: number,
-  removed: number,
-  fingerprintChanged: number,
-  errors: number,
-): void {
-  data.meta = {
-    ...data.meta,
-    lastRun: {
-      startedAt: now,
-      finishedAt: now,
-      requestsUsed,
-      budget,
-      exitReason,
-      counts: {
-        ...countStatuses(data.apps),
-        added,
-        removed,
-        fingerprintChanged,
-        errors,
-      },
-    },
-  };
-}
 
 export async function runCrawl(
   options: CrawlOptions,
@@ -256,11 +168,12 @@ export async function runCrawl(
           );
           return outcome;
         } catch (error) {
-          if (error instanceof AuthError) {
+          const kind = specialFailure(error);
+          if (kind === 'auth') {
             authFailure = true;
-          } else if (error instanceof BudgetExhaustedError) {
+          } else if (kind === 'budget') {
             budgetFailure = true;
-          } else if (error instanceof QuotaExhaustedError) {
+          } else if (kind === 'quota') {
             quotaFailure = true;
           }
           return {
@@ -273,7 +186,7 @@ export async function runCrawl(
   );
 
   let errorCount = 0;
-  const events: EventRecord[] = [];
+  const events: import('@devverify/core').EventRecord[] = [];
   for (const outcome of outcomes) {
     if (outcome.record !== undefined) {
       recordByPackage.set(outcome.package, outcome.record);
@@ -282,11 +195,7 @@ export async function runCrawl(
       }
       continue;
     }
-    if (
-      outcome.error instanceof AuthError ||
-      outcome.error instanceof BudgetExhaustedError ||
-      outcome.error instanceof QuotaExhaustedError
-    ) {
+    if (isSpecialError(outcome.error)) {
       continue;
     }
 
@@ -296,7 +205,7 @@ export async function runCrawl(
         outcome.package,
         applyCheckError(
           current,
-          safeError(outcome.error, options.apiKey),
+          errorRecord(outcome.error, options.apiKey),
           now,
         ),
       );
