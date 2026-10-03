@@ -121,9 +121,9 @@ export function syncRecords(options: SyncOptions): SyncResult {
 
   nextRecords.sort((a, b) => {
     if (a.source !== b.source) {
-      return a.source.localeCompare(b.source);
+      return a.source < b.source ? -1 : a.source > b.source ? 1 : 0;
     }
-    return a.package.localeCompare(b.package);
+    return a.package < b.package ? -1 : a.package > b.package ? 1 : 0;
   });
 
   return { records: nextRecords, added, removed, fingerprintChanged };
