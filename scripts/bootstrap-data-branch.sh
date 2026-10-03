@@ -28,6 +28,7 @@ fi
 tmp="$(mktemp -d)"
 cleanup() {
   git worktree remove --force "$tmp" >/dev/null 2>&1 || true
+  git branch -D data >/dev/null 2>&1 || true
   rm -rf "$tmp"
 }
 trap cleanup EXIT
