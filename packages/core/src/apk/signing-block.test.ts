@@ -78,9 +78,10 @@ describe('APK signing block parser', () => {
     });
     const eocd = await findEocd(createBufferSource(apk));
     const broken = new Uint8Array(apk);
-    const secondSizeOffset = eocd.centralDirectoryOffset - 24;
+    const block = await readSigningBlock(createBufferSource(apk), eocd.centralDirectoryOffset);
+    const firstSizeOffset = eocd.centralDirectoryOffset - block.byteLength;
     const view = new DataView(broken.buffer);
-    view.setBigUint64(secondSizeOffset, 1n, true);
+    view.setBigUint64(firstSizeOffset, 1n, true);
     await expect(extractApkSigners(createBufferSource(broken))).rejects.toMatchObject({
       code: 'APK_SIGNING_BLOCK_SIZE_MISMATCH',
     });
@@ -111,7 +112,7 @@ describe('APK signing block parser', () => {
     const pairLengthOffset = eocd.centralDirectoryOffset - block.byteLength + 8;
     new DataView(broken.buffer).setBigUint64(pairLengthOffset, 0xffffffffffffffffn, true);
     await expect(extractApkSigners(createBufferSource(broken))).rejects.toMatchObject({
-      code: 'APK_SIGNING_BLOCK_BOUNDS',
+      code: 'APK_SIGNING_BLOCK_U64_OVERFLOW',
     });
   });
 
