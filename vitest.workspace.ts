@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { defineWorkspace } from 'vitest/config';
 
 export default defineWorkspace([
@@ -23,6 +24,18 @@ export default defineWorkspace([
       root: './apps/crawler',
       include: ['src/**/*.test.ts'],
       coverage: { provider: 'v8' },
+    },
+    resolve: {
+      alias: [
+        {
+          find: '@devverify/core/node',
+          replacement: resolve(process.cwd(), 'packages/core/src/node.ts'),
+        },
+        {
+          find: '@devverify/core',
+          replacement: resolve(process.cwd(), 'packages/core/src/index.ts'),
+        },
+      ],
     },
   },
   {

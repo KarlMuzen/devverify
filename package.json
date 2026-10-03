@@ -12,7 +12,8 @@
     "test": "vitest run --coverage",
     "build": "pnpm -r --if-present build",
     "format": "prettier --write .",
-    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "crawl": "pnpm --filter @devverify/core build && pnpm --filter @devverify/crawler build && node apps/crawler/dist/index.js"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

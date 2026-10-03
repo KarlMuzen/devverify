@@ -38,7 +38,11 @@ importers:
 
   apps/action: {}
 
-  apps/crawler: {}
+  apps/crawler:
+    dependencies:
+      '@devverify/core':
+        specifier: workspace:*
+        version: link:../../packages/core
 
   packages/cli: {}
 

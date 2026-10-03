@@ -1,8 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist"
+    "rootDir": "../..",
+    "outDir": "dist",
+    "paths": {
+      "@devverify/core": ["../../packages/core/src/index.ts"],
+      "@devverify/core/node": ["../../packages/core/src/node.ts"]
+    }
   },
   "include": ["src/**/*.ts"]
 }
