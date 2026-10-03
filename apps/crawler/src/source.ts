@@ -7,7 +7,6 @@ import {
   type AppRecord,
   type AppStatus,
   type DataSet,
-  type PackageSource,
   type SourceSnapshot,
 } from '@devverify/core';
 import { DataStoreError } from '@devverify/core/node';
