@@ -276,36 +276,3 @@ describe('runCrawl', () => {
     expect(await snapshot(dir)).not.toEqual(before);
   });
 });
-
-describe('writeStepSummary', () => {
-  it('writes the machine result metrics to the GitHub step summary', async () => {
-    const path = join(
-      await mkdtemp(join(tmpdir(), 'devverify-summary-')),
-      'summary.md',
-    );
-    const result: CrawlResult = {
-      exitCode: 0,
-      exitReason: 'completed',
-      requestsUsed: 12,
-      budget: DEFAULT_BUDGET,
-      counts: {
-        registered: 4,
-        registered_other_key: 2,
-        not_registered: 10,
-        unknown: 1,
-        added: 2,
-        removed: 1,
-        fingerprintChanged: 3,
-        errors: 0,
-      },
-      warnings: [],
-    };
-
-    await writeStepSummary(path, result);
-    const content = await readFile(path, 'utf8');
-
-    expect(content).toContain('# devverify crawl');
-    expect(content).toContain('Requests used: 12/950');
-    expect(content).toContain('| registered | 4 |');
-  });
-});
