@@ -9,6 +9,7 @@ import {
   createStatusClient,
   type AppRecord,
   type DataSet,
+  type RequestBudget,
   type StatusCheckResult,
   type StatusClient,
 } from '@devverify/core';
@@ -21,7 +22,7 @@ import { countStatuses, safeError } from './source.js';
 
 export function createStatusClientForRun(
   options: CrawlOptions,
-  budget: import('@devverify/core').RequestBudget,
+  budget: RequestBudget,
   onRequest: () => void,
 ): StatusClient {
   if (options.statusClient !== undefined) {
