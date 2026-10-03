@@ -54,7 +54,7 @@ export function createFakeStatusClient({ seed }: { seed: string }): FakeStatusCl
           : { fingerprint: normalizedFingerprint }),
         state,
         rawState: state,
-      };
+      });
     },
   };
 }
