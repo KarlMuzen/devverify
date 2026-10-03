@@ -2,7 +2,8 @@ import { assertPackageName } from '../package-name.js';
 import { normalizeFingerprint } from '../fingerprint.js';
 import type { ApiState } from './types.js';
 
-/** Deterministic offline stand-in for the Status API client. */\nexport interface FakeStatusClient {
+/** Deterministic offline stand-in for the Status API client. */
+export interface FakeStatusClient {
   check(
     packageName: string,
     fingerprint?: string,
@@ -37,7 +38,8 @@ function stateFor(seed: string, packageName: string): ApiState {
   return 'NOT_REGISTERED';
 }
 
-/** Creates a seeded client that never performs network I/O. */\nexport function createFakeStatusClient({ seed }: { seed: string }): FakeStatusClient {
+/** Creates a seeded client that never performs network I/O. */
+export function createFakeStatusClient({ seed }: { seed: string }): FakeStatusClient {
   return {
     check(packageName, fingerprint) {
       const pkg = assertPackageName(packageName);
