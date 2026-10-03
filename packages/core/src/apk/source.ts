@@ -45,9 +45,9 @@ export function createBufferSource(bytes: Uint8Array): RandomAccessSource {
   const copy = new Uint8Array(bytes);
   return {
     size: copy.byteLength,
-    async read(offset: number, length: number): Promise<Uint8Array> {
+    read(offset: number, length: number): Promise<Uint8Array> {
       assertRange(copy.byteLength, offset, length);
-      return copy.slice(offset, offset + length);
+      return Promise.resolve(copy.slice(offset, offset + length));
     },
   };
 }
@@ -70,7 +70,7 @@ export function createCountingSource(
       const result = await inner.read(offset, length);
       bytesRead += result.byteLength;
       readCalls += 1;
-      return result;
+      return Promise.resolve(result);
     },
   };
 }
@@ -94,7 +94,7 @@ export function createVirtualSource(
 
   return {
     size,
-    async read(offset: number, length: number): Promise<Uint8Array> {
+    read(offset: number, length: number): Promise<Uint8Array> {
       assertRange(size, offset, length);
       const result = new Uint8Array(length);
 
