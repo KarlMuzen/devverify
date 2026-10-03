@@ -213,8 +213,8 @@ export async function buildApk(options: {
     const zip64Eocd = concat(
       u32(0x06064b50),
       u64(44),
-      new Uint8Array(4),
-      new Uint8Array(4),
+      u16(45),
+      u16(45),
       u32(0),
       u32(0),
       u64(options.entries.length),
@@ -243,8 +243,6 @@ export async function buildApk(options: {
     const eocd = concat(
       u32(0x06054b50),
       new Uint8Array(4),
-      new Uint8Array(2),
-      new Uint8Array(2),
       u16(options.entries.length),
       u16(options.entries.length),
       u32(centralDirectory.byteLength),
