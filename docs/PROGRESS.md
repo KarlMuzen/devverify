@@ -20,7 +20,7 @@ Legend: `[x]` completed in the repository; `[ ]` not completed.
 
 ## Phase 2 — Data pipeline
 
-- [ ] 2.1 Dataset schemas, deterministic storage, sample data
+- [x] 2.1 Dataset schemas, deterministic storage, sample data
 - [ ] 2.2 Sync, check-result application, scheduler (pure functions)
 - [ ] 2.3 Crawler runner
 - [ ] 2.4 GitHub Actions: crawl workflow and data branch
