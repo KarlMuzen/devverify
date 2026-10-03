@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { assertPackageName } from '../package-name.js';
 import { normalizeFingerprint } from '../fingerprint.js';
 import { DevVerifyError } from '../errors.js';
@@ -14,44 +13,19 @@ import {
   MAX_QUOTA_RETRIES,
   defaultSleep,
   parseRetryAfterSeconds,
-  retryDelayMs,
   type Random,
   type Sleep,
   waitBeforeRetry,
 } from './retry.js';
-import { mapApiState } from './types.js';
-import { redactSecrets } from './redact.js';
+import { parseErrorMessage, parseSuccess } from './protocol.js';
+import { buildStatusUrl, fetchWithTimeout, RequestTimeoutError } from './transport.js';
 
 export const STATUS_API_BASE_URL = 'https://androiddeveloperidstatus.googleapis.com';
-
-const statusResponseSchema = z
-  .object({
-    name: z.string(),
-    state: z.string(),
-  })
-  .passthrough();
-
-const errorResponseSchema = z
-  .object({
-    error: z
-      .object({
-        code: z.number().optional(),
-        message: z.string().optional(),
-        status: z.string().optional(),
-      })
-      .passthrough(),
-  })
-  .passthrough();
-
-interface StatusErrorPayload {
-  message?: string;
-  status?: string;
-}
 
 export interface StatusCheckResult {
   package: string;
   fingerprint?: string;
-  state: ReturnType<typeof mapApiState>;
+  state: ReturnType<typeof parseSuccess>['state'];
   rawState: string;
 }
 
@@ -79,13 +53,6 @@ export interface StatusClient {
   check(packageName: string, fingerprint?: string): Promise<StatusCheckResult>;
 }
 
-class RequestTimeoutError extends Error {
-  public constructor() {
-    super('Status API request timed out.');
-    this.name = 'RequestTimeoutError';
-  }
-}
-
 function validateOptions(options: StatusClientOptions): void {
   if (options.apiKey.length === 0) {
     throw new DevVerifyError('INVALID_API_KEY', 'An API key is required.');
@@ -109,94 +76,14 @@ function validateOptions(options: StatusClientOptions): void {
 
   const encoding = options.packageNameEncoding ?? 'dots';
   if (encoding !== 'dots' && encoding !== 'hyphens') {
-    throw new DevVerifyError('INVALID_PACKAGE_ENCODING', 'Unsupported package-name encoding.');
+    throw new DevVerifyError(
+      'INVALID_PACKAGE_ENCODING',
+      'Unsupported package-name encoding.',
+    );
   }
 }
 
-function requestUrl(
-  baseUrl: string,
-  packageName: string,
-  fingerprint: string | undefined,
-  encoding: 'dots' | 'hyphens',
-): string {
-  const encodedPackage =
-    encoding === 'hyphens' ? packageName.replaceAll('.', '-') : packageName;
-  const base = baseUrl.replace(/\/+$/, '');
-  const url = new URL(
-    'v1/packages/' +
-      encodeURIComponent(encodedPackage) +
-      '/packageRegistrationStatus:check',
-    base + '/',
-  );
-
-  if (fingerprint !== undefined) {
-    url.searchParams.set('certificateFingerprint', fingerprint);
-  }
-
-  return url.toString();
-}
-
-function errorPayload(text: string): StatusErrorPayload {
-  try {
-    const parsed: unknown = JSON.parse(text);
-    const result = errorResponseSchema.safeParse(parsed);
-    if (!result.success) {
-      return {};
-    }
-
-    return {
-      message: result.data.error.message,
-      status: result.data.error.status,
-    };
-  } catch {
-    return {};
-  }
-}
-
-function safeMessage(
-  message: string | undefined,
-  fallback: string,
-  apiKey: string,
-): string {
-  return redactSecrets(message?.trim() || fallback, [apiKey]);
-}
-
-async function fetchWithTimeout(
-  fetcher: typeof fetch,
-  url: string,
-  init: RequestInit,
-  timeoutMs: number,
-): Promise<Response> {
-  const controller = new AbortController();
-  let timedOut = false;
-  let timer: ReturnType<typeof setTimeout> | undefined;
-
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      timedOut = true;
-      controller.abort();
-      reject(new RequestTimeoutError());
-    }, timeoutMs);
-  });
-
-  try {
-    return await Promise.race([
-      fetcher(url, { ...init, signal: controller.signal }),
-      timeout,
-    ]);
-  } catch (error) {
-    if (timedOut || error instanceof RequestTimeoutError) {
-      throw new RequestTimeoutError();
-    }
-    throw error;
-  } finally {
-    if (timer !== undefined) {
-      clearTimeout(timer);
-    }
-  }
-}
-
-async function responseText(response: Response): Promise<string> {
+async function readBody(response: Response): Promise<string> {
   try {
     return await response.text();
   } catch {
@@ -205,6 +92,10 @@ async function responseText(response: Response): Promise<string> {
       response.status,
     );
   }
+}
+
+function isRetryableStatus(status: number): boolean {
+  return status >= 500 && status <= 599;
 }
 
 export function createStatusClient(options: StatusClientOptions): StatusClient {
@@ -218,7 +109,6 @@ export function createStatusClient(options: StatusClientOptions): StatusClient {
     );
   }
 
-  const baseUrl = options.baseUrl ?? STATUS_API_BASE_URL;
   const encoding = options.packageNameEncoding ?? 'dots';
   const timeoutMs = options.timeoutMs ?? 15_000;
   const maxAttempts = options.maxAttempts ?? 4;
@@ -230,8 +120,12 @@ export function createStatusClient(options: StatusClientOptions): StatusClient {
       const pkg = assertPackageName(packageName);
       const normalizedFingerprint =
         fingerprint === undefined ? undefined : normalizeFingerprint(fingerprint);
-      const url = requestUrl(baseUrl, pkg, normalizedFingerprint, encoding);
-
+      const url = buildStatusUrl(
+        options.baseUrl ?? STATUS_API_BASE_URL,
+        pkg,
+        normalizedFingerprint,
+        encoding,
+      );
       let transientRetries = 0;
       let quotaRetries = 0;
 
@@ -259,76 +153,59 @@ export function createStatusClient(options: StatusClientOptions): StatusClient {
             },
             timeoutMs,
           );
-
-          const body = await responseText(response);
+          const body = await readBody(response);
 
           if (response.status === 200) {
-            let parsed: unknown;
-            try {
-              parsed = JSON.parse(body);
-            } catch {
-              throw new ProtocolError(
-                'Status API returned invalid JSON.',
-                response.status,
-              );
-            }
-
-            const result = statusResponseSchema.safeParse(parsed);
-            if (!result.success) {
-              throw new ProtocolError(
-                'Status API returned an invalid response body.',
-                response.status,
-              );
-            }
-
+            const parsed = parseSuccess(body, response.status);
             return {
               package: pkg,
               ...(normalizedFingerprint === undefined
                 ? {}
                 : { fingerprint: normalizedFingerprint }),
-              state: mapApiState(result.data.state),
-              rawState: result.data.state,
+              state: parsed.state,
+              rawState: parsed.rawState,
             };
           }
 
-          const payload = errorPayload(body);
-          const messageFor = (fallback: string): string =>
-            safeMessage(payload.message, fallback, options.apiKey);
+          const message = (fallback: string): string =>
+            parseErrorMessage(body, options.apiKey, fallback);
 
           if (response.status === 400) {
-            throw new BadRequestError(messageFor('Status API rejected the request.'));
+            throw new BadRequestError(
+              message('Status API rejected the request.'),
+            );
           }
-
           if (response.status === 401 || response.status === 403) {
             throw new AuthError(
               response.status,
-              messageFor('Status API authentication failed.'),
+              message('Status API authentication failed.'),
             );
           }
-
           if (response.status === 429) {
-            const retryAfterSeconds = parseRetryAfterSeconds(
+            const retryAfter = parseRetryAfterSeconds(
               response.headers.get('Retry-After'),
             );
 
             if (
-              retryAfterSeconds !== undefined &&
-              retryAfterSeconds <= 30 &&
+              retryAfter !== undefined &&
+              retryAfter <= 30 &&
               quotaRetries < MAX_QUOTA_RETRIES &&
               attempt < maxAttempts
             ) {
               quotaRetries += 1;
-              await sleep(retryAfterSeconds * 1_000);
+              await sleep(retryAfter * 1_000);
               continue;
             }
 
             throw new QuotaExhaustedError(
-              messageFor('Status API quota is exhausted or retrying is not permitted.'),
-              retryAfterSeconds,
+              message(
+                'Status API quota is exhausted or retrying is not permitted.',
+              ),
+              retryAfter,
             );
           }
 
-          if (response.status >= 500 && response.status <= 599) {
+          if (isRetryableStatus(response.status)) {
             if (attempt < maxAttempts) {
               await waitBeforeRetry(transientRetries, sleep, random);
               transientRetries += 1;
@@ -336,7 +213,7 @@ export function createStatusClient(options: StatusClientOptions): StatusClient {
             }
 
             throw new TransientError(
-              messageFor('Status API failed after retries.'),
+              message('Status API failed after retries.'),
               response.status,
             );
           }
@@ -363,7 +240,9 @@ export function createStatusClient(options: StatusClientOptions): StatusClient {
           }
 
           if (error instanceof RequestTimeoutError) {
-            throw new TransientError('Status API request timed out after retries.');
+            throw new TransientError(
+              'Status API request timed out after retries.',
+            );
           }
 
           throw new TransientError(
@@ -375,11 +254,4 @@ export function createStatusClient(options: StatusClientOptions): StatusClient {
       throw new TransientError('Status API request failed after retries.');
     },
   };
-}
-
-export function getRetryDelayForTesting(
-  retryIndex: number,
-  random: Random = Math.random,
-): number {
-  return retryDelayMs(retryIndex, random);
 }
