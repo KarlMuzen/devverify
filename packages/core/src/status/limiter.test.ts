@@ -22,6 +22,7 @@ describe('createLimiter', () => {
       ),
     );
 
+    await Promise.resolve();
     expect(active).toBe(2);
     release.shift()?.();
     release.shift()?.();
