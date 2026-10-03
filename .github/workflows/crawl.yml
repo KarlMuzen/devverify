@@ -104,7 +104,7 @@ jobs:
             fi
 
             git -C data fetch origin data
-            git -C data pull --rebase origin data
+            git -C data rebase origin/data
           done
 
       - name: Success heartbeat
