@@ -1,0 +1,23 @@
+{
+  "title": "Registration status could not be determined",
+  "summary": "The registration state for com.example.test could not be determined for the checked signing key.",
+  "steps": [
+    "Retry the status check and confirm the package name and certificate fingerprint are correct.",
+    "Inspect the signing certificate from the exact APK build you intend to distribute.",
+    "Review the official Android developer verification documentation for current registration requirements."
+  ],
+  "links": [
+    {
+      "label": "Check registration status",
+      "url": "https://developer.android.com/developer-verification/guides/check-registration-status"
+    },
+    {
+      "label": "Android developer verification overview",
+      "url": "https://developer.android.com/developer-verification"
+    },
+    {
+      "label": "Android developer verification FAQ",
+      "url": "https://developer.android.com/developer-verification/guides/faq"
+    }
+  ]
+}
