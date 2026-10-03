@@ -29,7 +29,11 @@ import type {
   CrawlOptions,
   CrawlResult,
 } from './types.js';
-import { writeStepSummary } from './summary.js';
+import {
+  finishAuthFailure,
+  finishSummary,
+  saveCrawlData,
+} from './finish.js';
 
 export const DEFAULT_BUDGET = 950;
 export const DEFAULT_CONCURRENCY = 4;
@@ -215,26 +219,24 @@ export async function runCrawl(
   );
 
   if (authFailure) {
-    const result: CrawlResult = {
-      exitCode: 20,
-      exitReason: 'auth_error',
-      requestsUsed,
-      budget: options.budget,
-      counts: {
-        ...countStatuses(data.apps),
-        added: sync.added,
-        removed: sync.removed,
-        fingerprintChanged: sync.fingerprintChanged,
-        errors: errorCount,
+    return finishAuthFailure(
+      {
+        exitCode: 20,
+        exitReason: 'auth_error',
+        requestsUsed,
+        budget: options.budget,
+        counts: {
+          ...countStatuses(data.apps),
+          added: sync.added,
+          removed: sync.removed,
+          fingerprintChanged: sync.fingerprintChanged,
+          errors: errorCount,
+        },
+        warnings: ['Authentication failed; no dataset changes were written.'],
       },
-      warnings: ['Authentication failed; no dataset changes were written.'],
-    };
-    if (options.writeSummary === true && options.summaryPath !== undefined) {
-      await writeStepSummary(options.summaryPath, result).catch(
-        () => undefined,
-      );
-    }
-    return result;
+      options.writeSummary === true,
+      options.summaryPath,
+    );
   }
 
   data.apps = [...recordByPackage.values()].sort((a, b) =>
@@ -285,25 +287,18 @@ export async function runCrawl(
     warnings,
   };
 
-  if (!options.dryRun) {
-    try {
-      await store.save(data);
-    } catch (error) {
-      const info = safeError(error, options.apiKey);
-      result.exitCode = info.code === 'DATASET_SCHEMA' ? 40 : 1;
-      result.exitReason =
-        info.code === 'DATASET_SCHEMA' ? 'schema_error' : 'save_failed';
-      result.warnings.push(info.message);
-    }
-  }
+  const finished = await saveCrawlData(
+    store,
+    data,
+    result,
+    options.apiKey,
+  );
 
-  if (options.writeSummary === true && options.summaryPath !== undefined) {
-    await writeStepSummary(options.summaryPath, result).catch(
-      () => undefined,
-    );
-  }
-
-  return result;
+  return finishSummary(
+    finished,
+    options.writeSummary === true,
+    options.summaryPath,
+  );
 }
 
 export function resultJson(result: CrawlResult): string {
