@@ -71,7 +71,7 @@ describe('APK ZIP reader', () => {
     const eocd = await findEocd(createBufferSource(apk));
     const broken = new Uint8Array(apk);
     const cd = eocd.centralDirectoryOffset;
-    new DataView(broken.buffer).setUint32(cd + 42, 0xffffffff, true);
+    new DataView(broken.buffer).setUint32(cd + 42, apk.length + 1, true);
     const source = createBufferSource(broken);
     const entries = await readCentralDirectory(source);
     await expect(readEntry(source, 'bad', eocd, entries)).rejects.toMatchObject({
