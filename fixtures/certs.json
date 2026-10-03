@@ -1,0 +1,14 @@
+{
+  "v2": {
+    "file": "v2.der",
+    "sha256": "e47dc6d4f0bad980eca4d86210d670d1aa7d9da669325c79ce739841f95f3d7b"
+  },
+  "v3": {
+    "file": "v3.der",
+    "sha256": "aab6a17866bfea6725714dbbe052e7ec2366a9f1bfbe7f87f9461ba1c44b39b8"
+  },
+  "rotated": {
+    "file": "rotated.der",
+    "sha256": "4de1281d3c6f25d74e2d00a690bcb977c065be8b78976ffaffccd5436d3348d0"
+  }
+}

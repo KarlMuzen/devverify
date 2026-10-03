@@ -60,3 +60,30 @@ export {
 } from './fdroid/index.js';
 
 export const PACKAGE_NAME = '@devverify/core';
+
+
+export {
+  ApkParseError,
+  createBufferSource,
+  createCountingSource,
+  createVirtualSource,
+  extractApkSigners,
+  findEocd,
+  readCentralDirectory,
+  readEntry,
+  readSigningBlock,
+  MAX_CENTRAL_DIRECTORY_BYTES,
+  MAX_INFLATED_ENTRY_BYTES,
+  MAX_SIGNING_BLOCK_BYTES,
+  PROOF_OF_ROTATION_ATTRIBUTE_ID,
+  V2_BLOCK_ID,
+  V3_BLOCK_ID,
+  V31_BLOCK_ID,
+  type ApkSigner,
+  type ApkSignerScheme,
+  type CentralDirectoryEntry,
+  type CountingRandomAccessSource,
+  type EocdInfo,
+  type RandomAccessSource,
+  type VirtualPatch,
+} from './apk/index.js';
