@@ -17,6 +17,12 @@ export interface TestSigner {
   readonly maxSdk?: number;
 }
 
+function u16(value: number): Uint8Array {
+  const result = new Uint8Array(2);
+  new DataView(result.buffer).setUint16(0, value & 0xffff, true);
+  return result;
+}
+
 function u32(value: number): Uint8Array {
   const result = new Uint8Array(4);
   new DataView(result.buffer).setUint32(0, value >>> 0, true);
@@ -141,13 +147,16 @@ export async function buildApk(options: {
     const name = new TextEncoder().encode(entry.name);
     const local = concat(
       u32(0x04034b50),
-      new Uint8Array([20, 0, 0, 0]),
-      u32(method === 0 ? 0 : 0x08000000),
-      u32(method),
-      new Uint8Array(8),
+      u16(20),
+      u16(0),
+      u16(method),
+      u16(0),
+      u16(0),
+      u32(0),
       u32(storedData.byteLength),
       u32(entry.data.byteLength),
-      new Uint8Array([name.byteLength, 0, 0, 0]),
+      u16(name.byteLength),
+      u16(0),
       name,
       storedData,
     );
@@ -164,17 +173,21 @@ export async function buildApk(options: {
       : new Uint8Array();
     const central = concat(
       u32(0x02014b50),
-      new Uint8Array([45, 0, 20, 0]),
-      u32(method === 0 ? 0 : 0x08000000),
-      u32(method),
-      new Uint8Array(8),
+      u16(45),
+      u16(20),
+      u16(0),
+      u16(method),
+      u16(0),
+      u16(0),
+      u32(0),
       u32(zip64 ? 0xffffffff : storedData.byteLength),
       u32(zip64 ? 0xffffffff : entry.data.byteLength),
-      u32(name.byteLength),
-      u32(extra.byteLength),
-      new Uint8Array(2),
-      new Uint8Array(2),
-      new Uint8Array(4),
+      u16(name.byteLength),
+      u16(extra.byteLength),
+      u16(0),
+      u16(0),
+      u16(0),
+      u32(0),
       u32(zip64 ? 0xffffffff : offset),
       name,
       extra,
@@ -229,7 +242,8 @@ export async function buildApk(options: {
       new Uint8Array(4),
       new Uint8Array(2),
       new Uint8Array(2),
-      u32(options.entries.length),
+      u16(options.entries.length),
+      u16(options.entries.length),
       u32(centralDirectory.byteLength),
       u32(centralOffset),
       new Uint8Array([comment.byteLength & 0xff, comment.byteLength >>> 8]),
