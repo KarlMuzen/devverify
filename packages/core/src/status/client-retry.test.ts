@@ -96,7 +96,7 @@ describe('status client errors, retries, and budget', () => {
 
   it('throws TransientError after maxAttempts', async () => {
     const fetcher = vi.fn<typeof fetch>().mockImplementation(() =>
-      response(500, { error: { message: 'server' } }),
+      Promise.resolve(response(500, { error: { message: 'server' } })),
     );
     const sleep = vi.fn<(ms: number) => Promise<void>>().mockResolvedValue(undefined);
     const client = createStatusClient({
@@ -153,7 +153,9 @@ describe('status client errors, retries, and budget', () => {
 
   it('caps 429 retries at two retries', async () => {
     const fetcher = vi.fn<typeof fetch>().mockImplementation(() =>
-      response(429, { error: { message: 'busy' } }, { 'Retry-After': '5' }),
+      Promise.resolve(
+        response(429, { error: { message: 'busy' } }, { 'Retry-After': '5' }),
+      ),
     );
     const sleep = vi.fn<(ms: number) => Promise<void>>().mockResolvedValue(undefined);
     const client = createStatusClient({ ...options(fetcher), sleep });
@@ -166,8 +168,8 @@ describe('status client errors, retries, and budget', () => {
   });
 
   it('charges request budget on every HTTP attempt', async () => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
-      response(500, { error: { message: 'server' } }),
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(() =>
+      Promise.resolve(response(500, { error: { message: 'server' } })),
     );
     const sleep = vi.fn<(ms: number) => Promise<void>>().mockResolvedValue(undefined);
     const budget = new RequestBudget(2);
