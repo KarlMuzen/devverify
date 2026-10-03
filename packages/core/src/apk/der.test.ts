@@ -56,6 +56,29 @@ describe('minimal DER reader', () => {
     expect(() => readContextSpecific(parseDer(hex('3000')), 0)).toThrowError(ApkParseError);
   });
 
+  it('rejects malformed lengths and high-tag encodings', () => {
+    expectErrorCode(
+      () => parseDer(new Uint8Array([0x02])),
+      'APK_DER_TRUNCATED',
+    );
+    expectErrorCode(
+      () => parseDer(new Uint8Array([0x02, 0x89])),
+      'APK_DER_LENGTH_OVERFLOW',
+    );
+    expectErrorCode(
+      () => parseDer(new Uint8Array([0x02, 0x88, 0x20, 0, 0, 0, 0, 0, 0, 0])),
+      'APK_DER_LENGTH_INVALID',
+    );
+    expectErrorCode(
+      () => parseDer(new Uint8Array([0x1f, 0x1e, 0x00])),
+      'APK_DER_NON_MINIMAL_TAG',
+    );
+    expectErrorCode(
+      () => parseDer(new Uint8Array([0x1f, 0x82, 0x82, 0x82, 0x7f, 0x00])),
+      'APK_DER_TAG_OVERFLOW',
+    );
+  });
+
   it('rejects excessive depth and trailing bytes', () => {
     let bytes = hex('020101');
     for (let index = 0; index < MAX_DER_DEPTH + 1; index += 1) {

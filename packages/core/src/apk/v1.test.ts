@@ -178,6 +178,124 @@ describe('APK v1/JAR signatures', () => {
     );
   });
 
+  it('rejects malformed PKCS#7 structures before certificate matching', async () => {
+    const certificate = await fixture('chain-leaf.der');
+    const certificateSet = tlv(0xa0, certificate);
+    const makeSignedData = (...fields: readonly Uint8Array[]): Uint8Array =>
+      sequence(
+        integer(new Uint8Array([1])),
+        setOf(),
+        sequence(oid('2a864886f70d010701')),
+        ...fields,
+      );
+
+    expectErrorCode(
+      () => parseV1Signature(
+        sequence(oid('2a864886f70d010701'), tlv(0xa0, sequence())),
+      ),
+      'APK_V1_PKCS7_TYPE',
+    );
+
+    expectErrorCode(
+      () => parseV1Signature(sequence(oid('2a864886f70d010702'))),
+      'APK_V1_PKCS7_INVALID',
+    );
+
+    expectErrorCode(
+      () => parseV1Signature(
+        sequence(oid('2a864886f70d010702'), tlv(0xa0, new Uint8Array())),
+      ),
+      'APK_V1_PKCS7_CONTENT',
+    );
+
+    expectErrorCode(
+      () => parseV1Signature(
+        sequence(
+          oid('2a864886f70d010702'),
+          tlv(0xa0, makeSignedData()),
+        ),
+      ),
+      'APK_V1_SIGNED_DATA',
+    );
+
+    expectErrorCode(
+      () => parseV1Signature(
+        sequence(
+          oid('2a864886f70d010702'),
+          tlv(0xa0, makeSignedData(setOf())),
+        ),
+      ),
+      'APK_V1_CERTIFICATE_MISSING',
+    );
+
+    expectErrorCode(
+      () => parseV1Signature(
+        sequence(
+          oid('2a864886f70d010702'),
+          tlv(0xa0, makeSignedData(tlv(0xa0, new Uint8Array()), setOf())),
+        ),
+      ),
+      'APK_V1_CERTIFICATE_MISSING',
+    );
+
+    expectErrorCode(
+      () => parseV1Signature(
+        sequence(
+          oid('2a864886f70d010702'),
+          tlv(0xa0, makeSignedData(certificateSet, sequence())),
+        ),
+      ),
+      'APK_DER_SET',
+    );
+
+    const signerWithUnexpectedSid = sequence(
+      integer(new Uint8Array([1])),
+      tlv(0x04, new Uint8Array()),
+      sequence(),
+      tlv(0x04, new Uint8Array()),
+    );
+    const signerWithEmptyIdentity = sequence(
+      integer(new Uint8Array([1])),
+      sequence(),
+      sequence(),
+      tlv(0x04, new Uint8Array()),
+    );
+
+    expect(() =>
+      parseV1Signature(
+        sequence(
+          oid('2a864886f70d010702'),
+          tlv(0xa0, makeSignedData(certificateSet, setOf(signerWithUnexpectedSid))),
+        ),
+      ),
+    ).not.toThrow();
+
+    expect(() =>
+      parseV1Signature(
+        sequence(
+          oid('2a864886f70d010702'),
+          tlv(0xa0, makeSignedData(certificateSet, setOf(signerWithEmptyIdentity))),
+        ),
+      ),
+    ).not.toThrow();
+  });
+
+  it('enforces the v1 entry-size limit before reading the entry', async () => {
+    await expect(
+      extractV1Signers(
+        createBufferSource(new Uint8Array()),
+        undefined,
+        [{
+          name: 'META-INF/CERT.RSA',
+          method: 0,
+          compressedSize: MAX_V1_SIGNATURE_BYTES + 1,
+          uncompressedSize: 1,
+          localHeaderOffset: 0,
+        }],
+      ),
+    ).rejects.toThrowError(ApkParseError);
+  });
+
   it('ignores non-signature META-INF files and supports RSA, DSA, and EC suffixes', async () => {
     const certificate = await fixture('chain-leaf.der');
     const payload = pkcs7([certificate]);
