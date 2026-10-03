@@ -78,6 +78,37 @@ describe('parseSignerIndex', () => {
     ]);
   });
 
+  it('ignores an object entry with no valid fingerprints', () => {
+    const result = parseSignerIndex({
+      'com.example.app': {
+        signer: 'not-a-fingerprint',
+      },
+    });
+
+    expect(result.entries).toEqual([]);
+    expect(result.warnings).toHaveLength(1);
+  });
+
+  it('warns on non-object array rows without rejecting other valid rows', () => {
+    const result = parseSignerIndex([
+      'not-an-object',
+      {
+        packageName: 'com.example.app',
+        signer: '33'.repeat(32),
+      },
+    ]);
+
+    expect(result.entries).toEqual([
+      {
+        package: 'com.example.app',
+        fingerprints: ['33'.repeat(32)],
+      },
+    ]);
+    expect(result.warnings).toEqual([
+      'Unrecognized signer-index array entry.',
+    ]);
+  });
+
   it('throws SourceFormatError for an unrecognizable payload', async () => {
     const malformed = await fixture('malformed.json');
 
