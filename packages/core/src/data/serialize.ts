@@ -57,18 +57,24 @@ function orderedRecord(value: DatasetRecord): Record<string, unknown> {
   return result;
 }
 
+function isAppRecord(value: DatasetRecord): value is AppRecord {
+  return 'source' in value;
+}
+
 function compareRecords(left: DatasetRecord, right: DatasetRecord): number {
-  const leftRecord = left as unknown as Record<string, unknown>;
-  const rightRecord = right as unknown as Record<string, unknown>;
-  if ('source' in leftRecord && 'source' in rightRecord) {
+  const leftIsApp = isAppRecord(left);
+  const rightIsApp = isAppRecord(right);
+  if (leftIsApp && rightIsApp) {
     return left.package.localeCompare(right.package);
   }
-  if ('at' in leftRecord && 'at' in rightRecord) {
-    return left.at.localeCompare(right.at) ||
+  if (!leftIsApp && !rightIsApp) {
+    return (
+      left.at.localeCompare(right.at) ||
       left.package.localeCompare(right.package) ||
-      left.to.localeCompare(right.to);
+      left.to.localeCompare(right.to)
+    );
   }
-  return 'source' in leftRecord ? -1 : 1;
+  return leftIsApp ? -1 : 1;
 }
 
 export function toNdjson(records: readonly DatasetRecord[]): string {
