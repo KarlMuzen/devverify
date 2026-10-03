@@ -53,7 +53,7 @@ describe('dataset serialization', () => {
 
   it('reports the line number for malformed NDJSON', () => {
     expect(() => parseAppsNdjson('{}\nnot-json\n')).toThrow(
-      new DataFormatError('apps.ndjson line 2 is not valid JSON.'),
+      'apps.ndjson line 2 is not valid JSON.',
     );
   });
 
