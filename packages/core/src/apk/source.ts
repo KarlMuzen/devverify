@@ -46,8 +46,12 @@ export function createBufferSource(bytes: Uint8Array): RandomAccessSource {
   return {
     size: copy.byteLength,
     read(offset: number, length: number): Promise<Uint8Array> {
-      assertRange(copy.byteLength, offset, length);
-      return Promise.resolve(copy.slice(offset, offset + length));
+      try {
+        assertRange(copy.byteLength, offset, length);
+        return Promise.resolve(copy.slice(offset, offset + length));
+      } catch (error) {
+        return Promise.reject(error);
+      }
     },
   };
 }
@@ -95,27 +99,31 @@ export function createVirtualSource(
   return {
     size,
     read(offset: number, length: number): Promise<Uint8Array> {
-      assertRange(size, offset, length);
-      const result = new Uint8Array(length);
+      try {
+        assertRange(size, offset, length);
+        const result = new Uint8Array(length);
 
-      for (const patch of normalized) {
-        if (patch.offset >= offset + length) {
-          break;
-        }
-        const patchEnd = patch.offset + patch.data.byteLength;
-        if (patchEnd <= offset) {
-          continue;
+        for (const patch of normalized) {
+          if (patch.offset >= offset + length) {
+            break;
+          }
+          const patchEnd = patch.offset + patch.data.byteLength;
+          if (patchEnd <= offset) {
+            continue;
+          }
+
+          const copyStart = Math.max(offset, patch.offset);
+          const copyEnd = Math.min(offset + length, patchEnd);
+          result.set(
+            patch.data.subarray(copyStart - patch.offset, copyEnd - patch.offset),
+            copyStart - offset,
+          );
         }
 
-        const copyStart = Math.max(offset, patch.offset);
-        const copyEnd = Math.min(offset + length, patchEnd);
-        result.set(
-          patch.data.subarray(copyStart - patch.offset, copyEnd - patch.offset),
-          copyStart - offset,
-        );
+        return Promise.resolve(result);
+      } catch (error) {
+        return Promise.reject(error);
       }
-
-      return Promise.resolve(result);
     },
   };
 }
