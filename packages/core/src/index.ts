@@ -61,7 +61,6 @@ export {
 
 export const PACKAGE_NAME = '@devverify/core';
 
-
 export {
   ApkParseError,
   createBufferSource,
@@ -72,18 +71,24 @@ export {
   readCentralDirectory,
   readEntry,
   readSigningBlock,
+  parseApk,
+  parseBinaryXml,
   MAX_CENTRAL_DIRECTORY_BYTES,
   MAX_INFLATED_ENTRY_BYTES,
+  MAX_MANIFEST_BYTES,
   MAX_SIGNING_BLOCK_BYTES,
   PROOF_OF_ROTATION_ATTRIBUTE_ID,
   V2_BLOCK_ID,
   V3_BLOCK_ID,
   V31_BLOCK_ID,
+  type ApkParseStats,
   type ApkSigner,
   type ApkSignerScheme,
   type CentralDirectoryEntry,
   type CountingRandomAccessSource,
   type EocdInfo,
+  type ParsedApk,
+  type ParsedManifest,
   type RandomAccessSource,
   type VirtualPatch,
 } from './apk/index.js';

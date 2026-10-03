@@ -6,6 +6,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
     }
   },
   "files": [
@@ -14,7 +18,7 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "build": "tsup src/index.ts --format esm --dts --out-dir dist"
+    "build": "tsup src/index.ts src/node.ts --format esm --dts --out-dir dist"
   },
   "dependencies": {
     "zod": "^4.6.5"
