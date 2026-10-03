@@ -1,0 +1,26 @@
+{
+  "title": "Package not registered for the checked signing key",
+  "summary": "The signing key checked for com.example.test is not registered for that package.",
+  "steps": [
+    "Register com.example.test with the signing key used by this build.",
+    "Re-run the registration status check after the package and signing key are updated."
+  ],
+  "links": [
+    {
+      "label": "Check registration status",
+      "url": "https://developer.android.com/developer-verification/guides/check-registration-status"
+    },
+    {
+      "label": "Open-source app registration guide",
+      "url": "https://developer.android.com/developer-verification/guides/open-source-app-registration"
+    },
+    {
+      "label": "Limited distribution guide",
+      "url": "https://developer.android.com/developer-verification/guides/limited-distribution"
+    },
+    {
+      "label": "Full distribution guide",
+      "url": "https://developer.android.com/developer-verification/guides/full-distribution"
+    }
+  ]
+}
