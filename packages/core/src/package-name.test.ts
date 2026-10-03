@@ -10,7 +10,7 @@ describe('package names', () => {
   it.each([
     ['com.example.app', true],
     ['a.b', true],
-    ['A1._ok.abc9', true],
+    ['A1.ok_1.abc9', true],
     ['1com.example', false],
     ['example', false],
     ['com-example.app', false],
