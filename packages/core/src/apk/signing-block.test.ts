@@ -93,7 +93,8 @@ describe('APK signing block parser', () => {
     });
     const eocd = await findEocd(createBufferSource(apk));
     const broken = new Uint8Array(apk);
-    broken[eocd.centralDirectoryOffset - 1] ^= 0xff;
+    const magicOffset = eocd.centralDirectoryOffset - 1;
+    broken[magicOffset] = (broken[magicOffset] ?? 0) ^ 0xff;
     await expect(extractApkSigners(createBufferSource(broken))).rejects.toMatchObject({
       code: 'APK_SIGNING_BLOCK_MAGIC',
     });
