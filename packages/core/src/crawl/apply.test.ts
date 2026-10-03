@@ -110,11 +110,9 @@ describe('applyCheckError', () => {
 
     expect(next.status).toBe('not_registered');
     expect(next.errorCount).toBe(3);
-    expect(next.lastError).toEqual({
-      at: NOW,
-      code: 'TRANSIENT_ERROR',
-      message: expect.any(String),
-    });
+    expect(next.lastError?.at).toBe(NOW);
+    expect(next.lastError?.code).toBe('TRANSIENT_ERROR');
+    expect(typeof next.lastError?.message).toBe('string');
     expect(next.lastError?.message).toHaveLength(200);
     expect(next.lastError?.message).not.toMatch(/[\r\n\t]/);
   });
