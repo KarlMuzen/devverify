@@ -3,7 +3,8 @@ function escapeRegExp(value: string): string {
   return [...value].map((char) => (special.has(char) ? '\\' + char : char)).join('');
 }
 
-/** Removes configured secret values from human-readable text. */\nexport function redactSecrets(text: string, secrets: string[]): string {
+/** Removes configured secret values from human-readable text. */
+export function redactSecrets(text: string, secrets: string[]): string {
   let redacted = text;
 
   for (const secret of [...secrets]
