@@ -10,7 +10,7 @@ Legend: `[x]` completed in the repository; `[ ]` not completed.
 
 ## Phase 1 — `packages/core`
 
-- [ ] 1.1 Domain primitives
+- [x] 1.1 Domain primitives
 - [ ] 1.2 Status API client
 - [ ] 1.3 Package sources and the F-Droid adapter
 - [ ] 1.4a ZIP reader and v2/v3 signing-block certificates
