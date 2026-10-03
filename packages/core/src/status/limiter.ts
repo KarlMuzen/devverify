@@ -17,17 +17,6 @@ export function createLimiter(concurrency: number): Limiter {
   let available = concurrency;
   const waiters: Array<() => void> = [];
 
-  async function acquire(): Promise<void> {
-    if (available > 0) {
-      available -= 1;
-      return;
-    }
-
-    await new Promise<void>((resolve) => {
-      waiters.push(resolve);
-    });
-  }
-
   function release(): void {
     const next = waiters.shift();
     if (next !== undefined) {
@@ -38,7 +27,14 @@ export function createLimiter(concurrency: number): Limiter {
   }
 
   return async <T>(task: LimitTask<T>): Promise<T> => {
-    await acquire();
+    if (available > 0) {
+      available -= 1;
+    } else {
+      await new Promise<void>((resolve) => {
+        waiters.push(resolve);
+      });
+    }
+
     try {
       return await task();
     } finally {
