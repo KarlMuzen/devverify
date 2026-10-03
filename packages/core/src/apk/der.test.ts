@@ -17,28 +17,21 @@ function hex(input: string): Uint8Array {
 
 describe('minimal DER reader', () => {
   it('reads sequences, sets, integers, OIDs, and context-specific tags', () => {
-    const root = parseDer(hex('3018300e02010106092a864886f70d010702a0030201013003020101'));
-    const fields = readSequence(root);
-    const first = fields[0];
-    const oidFields = first === undefined ? [] : readSequence(first);
+    expect(readInteger(parseDer(hex('020101')))).toEqual(hex('01'));
+    expect(readOid(parseDer(hex('06092a864886f70d010702')))).toBe('1.2.840.113549.1.7.2');
 
-    expect(readInteger(oidFields[0] ?? root)).toEqual(hex('01'));
-    expect(readOid(oidFields[1] ?? root)).toBe('1.2.840.113549.1.7.2');
+    const context = parseDer(hex('a003020101'));
+    expect(readContextSpecific(context, 0)).toHaveLength(1);
+    expect(isContextSpecific(context, 0)).toBe(true);
 
-    const context = fields[1];
-    expect(context).toBeDefined();
-    if (context !== undefined) {
-      expect(readContextSpecific(context, 0)).toHaveLength(1);
-      expect(isContextSpecific(context, 0)).toBe(true);
-    }
-
+    expect(readSequence(parseDer(hex('3003020101')))).toHaveLength(1);
     expect(readSet(parseDer(hex('3103020101')))).toHaveLength(1);
   });
 
   it('accepts long-form definite lengths and high-tag numbers', () => {
-    const highTag = new Uint8Array([0x3f, 0x20, 0x01, 0x00]);
+    const highTag = new Uint8Array([0x1f, 0x20, 0x00]);
     expect(parseDer(highTag).tagNumber).toBe(32);
-    expect(() => parseDer(new Uint8Array([0x3f, 0x81, 0x01, 0x00]))).not.toThrow();
+    expect(() => parseDer(new Uint8Array([0x1f, 0x81, 0x01, 0x00]))).not.toThrow();
     expect(() => parseDer(new Uint8Array([0x02, 0x82, 0x00, 0x80]))).toThrow();
   });
 

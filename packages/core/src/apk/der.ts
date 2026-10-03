@@ -47,8 +47,11 @@ function readLength(bytes: Uint8Array, cursor: Cursor): number {
   for (let index = 0; index < count; index += 1) {
     value = (value << 8n) | BigInt(bytes[cursor.position++] ?? 0);
   }
-  if (value < 128n || value > BigInt(Number.MAX_SAFE_INTEGER)) {
-    return fail('APK_DER_LENGTH_INVALID', 'DER length is invalid or non-minimal.');
+  if (value < 128n) {
+    return fail('APK_DER_NON_MINIMAL_LENGTH', 'DER long-form length is not minimally encoded.');
+  }
+  if (value > BigInt(Number.MAX_SAFE_INTEGER)) {
+    return fail('APK_DER_LENGTH_INVALID', 'DER length is too large.');
   }
   return Number(value);
 }
