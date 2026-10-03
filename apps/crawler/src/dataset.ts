@@ -1,9 +1,9 @@
 import { stat } from 'node:fs/promises';
 import type {
   DataSet,
-  DataStore,
+  Meta,
 } from '@devverify/core';
-import type { Meta } from '@devverify/core';
+import type { DataStore } from '@devverify/core/node';
 import { DataStoreError } from '@devverify/core/node';
 import type { MutableCrawlData } from './types.js';
 
