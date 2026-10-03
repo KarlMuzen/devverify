@@ -5,7 +5,6 @@ import {
   RequestBudget,
   selectBatch,
   syncRecords,
-  type DataSet,
   type StatusClient,
 } from '@devverify/core';
 import { createDataStore } from '@devverify/core/node';
@@ -29,6 +28,7 @@ import {
 import type {
   CrawlOptions,
   CrawlResult,
+  MutableCrawlData,
 } from './types.js';
 import {
   finishAuthFailure,
@@ -50,9 +50,15 @@ export async function runCrawl(
   }
 
   const store = createDataStore(options.dataDir);
-  let data: DataSet;
+  let data: MutableCrawlData;
   try {
-    data = await store.load();
+    const loaded = await store.load();
+    data = {
+      apps: [...loaded.apps],
+      events: [...loaded.events],
+      timeseries: [...loaded.timeseries],
+      meta: loaded.meta,
+    };
   } catch (error) {
     return failureResult(
       40,
