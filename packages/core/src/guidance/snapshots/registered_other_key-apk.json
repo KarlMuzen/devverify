@@ -1,0 +1,23 @@
+{
+  "title": "Package registered with another signing key",
+  "summary": "The package com.example.test is registered, but not for the signing key checked in this build.",
+  "steps": [
+    "Compare the checked certificate fingerprint AA:BB with the signing keys registered for com.example.test.",
+    "Confirm which developer and which distribution channel use each registered signing key; the package may be associated with a different developer.",
+    "If this signing key should be covered, follow the official registration guidance to add and verify the key."
+  ],
+  "links": [
+    {
+      "label": "Check registration status",
+      "url": "https://developer.android.com/developer-verification/guides/check-registration-status"
+    },
+    {
+      "label": "Open-source app registration guide",
+      "url": "https://developer.android.com/developer-verification/guides/open-source-app-registration"
+    },
+    {
+      "label": "Android developer verification FAQ",
+      "url": "https://developer.android.com/developer-verification/guides/faq"
+    }
+  ]
+}
