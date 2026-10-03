@@ -1,4 +1,4 @@
-NOTE: Read @Agents.md and @CODEX_BUILD_PLAN.md first and then check current state of repo against the plan.
+NOTE: Read https://github.com/KarlMuzen/devverify/blob/main/AGENTS.md and https://github.com/KarlMuzen/devverify/blob/main/CODEX_BUILD_PLAN.md first and then check current state of repo against the plan.
 
 
 
