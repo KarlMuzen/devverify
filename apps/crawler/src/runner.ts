@@ -7,6 +7,7 @@ import {
   syncRecords,
   type DataSet,
 } from '@devverify/core';
+import { createDataStore } from '@devverify/core/node';
 import {
   loadSource,
   normalizeNow,
