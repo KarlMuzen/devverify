@@ -1,9 +1,9 @@
 import { DevVerifyError } from '../errors.js';
 
-export type LimitTask<T> = () => Promise<T>;
-export type Limiter = <T>(task: LimitTask<T>) => Promise<T>;
+/** Asynchronous work executed under a concurrency permit. */\nexport type LimitTask<T> = () => Promise<T>;
+/** Concurrency-limited task runner. */\nexport type Limiter = <T>(task: LimitTask<T>) => Promise<T>;
 
-export function createLimiter(concurrency: number): Limiter {
+/** Creates a FIFO promise-based concurrency limiter. */\nexport function createLimiter(concurrency: number): Limiter {
   if (!Number.isSafeInteger(concurrency) || concurrency < 1) {
     throw new DevVerifyError(
       'INVALID_CONCURRENCY',
