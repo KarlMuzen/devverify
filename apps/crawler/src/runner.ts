@@ -1,6 +1,5 @@
 import {
   applyCheckError,
-  computeTimeseriesRow,
   createDataStore,
   createLimiter,
   RequestBudget,
@@ -23,20 +22,18 @@ import {
   errorRecord,
   isSpecialError,
   processPackage,
+  replaceTimeseriesRow,
   specialFailure,
 } from './checks.js';
 import type {
   CrawlOptions,
   CrawlResult,
-  PackageOutcome,
 } from './types.js';
 import { writeStepSummary } from './summary.js';
 
 export const DEFAULT_BUDGET = 950;
 export const DEFAULT_CONCURRENCY = 4;
 export const DEFAULT_MAX_FINGERPRINTS = 2;
-export const DEFAULT_FAKE_SEED = 'devverify-crawler';
-
 export async function runCrawl(
   options: CrawlOptions,
 ): Promise<CrawlResult> {
