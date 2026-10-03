@@ -19,6 +19,18 @@ export {
 } from './zip.js';
 
 export {
+  parseBinaryXml,
+  MAX_MANIFEST_BYTES,
+  type ParsedManifest,
+} from './axml.js';
+
+export {
+  parseApk,
+  type ApkParseStats,
+  type ParsedApk,
+} from './parse.js';
+
+export {
   parseDer,
   readContextSpecific,
   readInteger,

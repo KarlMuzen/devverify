@@ -15,7 +15,7 @@ Legend: `[x]` completed in the repository; `[ ]` not completed.
 - [x] 1.3 Package sources and the F-Droid adapter
 - [x] 1.4a ZIP reader and v2/v3 signing-block certificates
 - [x] 1.4b v1 (JAR) fallback and minimal DER
-- [ ] 1.4c Binary manifest and `parseApk()`
+- [x] 1.4c Binary manifest and `parseApk()`
 - [ ] 1.5 Remediation guidance (shared text)
 
 ## Phase 2 — Data pipeline

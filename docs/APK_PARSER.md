@@ -1,24 +1,62 @@
 # APK parser
 
-The APK parser is designed for untrusted APK bytes and reads only the ranges needed for ZIP metadata, APK Signature Scheme v2/v3/v3.1 certificate extraction, and a bounded v1/JAR fallback.
+The APK parser handles untrusted APK bytes with bounded random-access reads. It extracts Android manifest metadata and declared signer certificates; it does not verify APK signatures, signer digests, certificate chains, APK contents, or proof-of-rotation cryptographic validity.
 
-## Scope
+## Pipeline
 
-- Reads ZIP EOCD data with one tail read and supports ZIP64 EOCD records plus ZIP64 central-directory extra fields.
-- Reads the central directory in one bounded range and supports stored and deflated entries through Web CompressionStream.
-- Locates the APK Signing Block immediately before the central directory and validates both 64-bit size fields and the magic.
-- Extracts declared signer certificates from v2, v3, and v3.1 signer records and computes SHA-256 fingerprints of the first certificate.
-- Finds `META-INF/*.RSA`, `*.DSA`, and `*.EC` v1 signature files, parses only the PKCS#7 SignedData fields needed for certificate identity, and prefers a matching issuer/serial certificate when a chain is present.
-- Combines v1 and v2/v3.x identities without cryptographic verification; disagreements across schemes retain all distinct fingerprints and produce a warning.
-- Flags the v3/v3.1 proof-of-rotation attribute as rotation lineage.
-- Caps signing blocks, signer counts, certificate counts, certificate size, central-directory size, and inflated entry size.
+1. Locate the ZIP End of Central Directory and read the central directory without reading the whole APK.
+2. Read only the `AndroidManifest.xml` entry, capped at 8 MiB after inflation.
+3. Parse Android binary XML string pools and the supported XML chunks needed for `<manifest>` and `<uses-sdk>`.
+4. Extract v2/v3/v3.1 signer certificates from the APK Signing Block and v1/JAR certificate chains from `META-INF/*.RSA`, `*.DSA`, and `*.EC`.
+5. Reconcile signer certificates across schemes, retaining disagreements and identifying the preferred v2/v3.x signer.
+6. Return metadata, signer state, warnings, and the parser read statistics.
 
-The parser does not verify APK signatures, signer digests, certificate chains, APK contents, or proof-of-rotation cryptographic validity. A certificate is treated as declared signer material for reporting only.
+## Android binary XML support
 
-## Random-access model
+The AXML reader supports:
 
-All APK reads use `RandomAccessSource`. Tests include a counting source and a sparse virtual source so large APKs can be parsed without reading the full file into memory.
+- XML headers and string pools with UTF-8 and UTF-16 strings, including one- and two-unit length encodings.
+- Optional resource-map chunks.
+- Namespace start/end chunks.
+- Start/end element chunks.
+- Unknown chunk types, which are skipped using their bounded chunk sizes.
 
-## Fixtures
+From the root `<manifest>`, the parser reads the namespace-free `package` attribute plus `android:versionCode` and `android:versionName`. From a direct child `<uses-sdk>`, it reads `android:minSdkVersion` and `android:targetSdkVersion`.
 
-Throwaway X.509 DER certificates live under `fixtures/certs/`, while the test suite builds deterministic PKCS#7 v1 structures from those DER certificates. The OpenSSL-backed `scripts/gen-fixtures.sh` can also generate real `.RSA` v1 signature artifacts for manual validation; no private keys are committed.
+The inflated manifest is capped at 8 MiB. Every AXML chunk, string-pool offset, attribute range, and typed value is bounds-checked. Malformed binary XML is reported through `MANIFEST_INVALID` by `parseApk()`.
+
+## Signatures
+
+v2, v3, and v3.1 certificates are read from the APK Signing Block. v1/JAR signature files are parsed as bounded PKCS#7 SignedData. Signer identity is reported from the declared certificate material.
+
+When multiple schemes expose different certificates, the parser keeps every distinct fingerprint, sets `signersDisagree`, and emits a warning. v3/v3.1 proof-of-rotation attributes are surfaced as `hasRotationLineage`.
+
+A missing signature is not an error: `parseApk()` returns an empty signer list and a warning.
+
+## Random-access and Node entry
+
+All APK reads use `RandomAccessSource`; tests include counting and sparse virtual sources to detect accidental whole-file reads. The `@devverify/core/node` entry exposes `fileSource()`, backed by `fs.promises.open()`, for local APK files. The browser entry will provide the corresponding Blob-backed source in Phase 5.
+
+## Error contract
+
+`parseApk()` uses these stable high-level codes for archive/manifest failures:
+
+- `NOT_A_ZIP`: ZIP structure could not be located or validated.
+- `NO_MANIFEST`: the central directory has no `AndroidManifest.xml` entry.
+- `MANIFEST_INVALID`: the manifest entry cannot be read or parsed as supported AXML.
+
+Lower-level typed `ApkParseError` codes remain available for parser diagnostics.
+
+## Limits and threat model
+
+The parser treats lengths, offsets, chunk sizes, signer counts, certificate sizes, and entry sizes as hostile input. ZIP central-directory and signing-block limits remain those documented by their modules; v1 signatures are capped at 1 MiB; DER depth is capped at 16; the inflated manifest is capped at 8 MiB.
+
+The parser is a metadata extractor, not a cryptographic verifier. A successful fingerprint result means that the certificate was declared by the APK's supported signature structures, not that the APK's signature or digest was independently verified.
+
+## Live cross-check
+
+For human validation, compare three representative APKs (v1-only, v2/v3, and one with rotated key lineage) against:
+
+`apksigner verify --print-certs <apk>`
+
+Record the observed certificate fingerprints and scheme/lineage differences in `docs/LIVE_VERIFICATION.md`. This remains a human verification item until performed.
