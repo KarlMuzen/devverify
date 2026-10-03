@@ -1,6 +1,7 @@
 import { DevVerifyError } from '../errors.js';
 
-/** Authentication/permission failure returned by the Status API. */\nexport class AuthError extends DevVerifyError {
+/** Authentication/permission failure returned by the Status API. */
+export class AuthError extends DevVerifyError {
   public readonly status: 401 | 403;
 
   public constructor(status: 401 | 403, message: string) {
@@ -10,7 +11,8 @@ import { DevVerifyError } from '../errors.js';
   }
 }
 
-/** Invalid request rejected by the Status API. */\nexport class BadRequestError extends DevVerifyError {
+/** Invalid request rejected by the Status API. */
+export class BadRequestError extends DevVerifyError {
   public readonly status = 400;
 
   public constructor(message: string) {
@@ -19,7 +21,8 @@ import { DevVerifyError } from '../errors.js';
   }
 }
 
-/** Quota/rate-limit response that cannot be retried safely. */\nexport class QuotaExhaustedError extends DevVerifyError {
+/** Quota/rate-limit response that cannot be retried safely. */
+export class QuotaExhaustedError extends DevVerifyError {
   public readonly status = 429;
 
   public constructor(message: string, public readonly retryAfterSeconds?: number) {
@@ -28,7 +31,8 @@ import { DevVerifyError } from '../errors.js';
   }
 }
 
-/** Retryable failure that remained after bounded retries. */\nexport class TransientError extends DevVerifyError {
+/** Retryable failure that remained after bounded retries. */
+export class TransientError extends DevVerifyError {
   public readonly status?: number;
 
   public constructor(message: string, status?: number) {
@@ -38,7 +42,8 @@ import { DevVerifyError } from '../errors.js';
   }
 }
 
-/** Malformed or otherwise incompatible Status API response. */\nexport class ProtocolError extends DevVerifyError {
+/** Malformed or otherwise incompatible Status API response. */
+export class ProtocolError extends DevVerifyError {
   public readonly status?: number;
 
   public constructor(message: string, status?: number) {
