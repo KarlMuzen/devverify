@@ -132,7 +132,7 @@ export async function extractApkSigners(source: RandomAccessSource): Promise<Apk
   const result: ApkSignerType[] = [];
 
   while (cursor.remaining > 0) {
-    const pair = cursor.lp('APK_SIGNING_PAIR_INVALID');
+    const pair = cursor.lp64('APK_SIGNING_PAIR_INVALID');
     if (pair.byteLength < 4) {
       throw new ApkParseError(
         'APK_SIGNING_PAIR_INVALID',
