@@ -127,8 +127,7 @@ jobs:
           set -euo pipefail
 
           run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          existing="$(gh issue list             --state all             --limit 20             --search 'in:title "Crawl failed"'             --json number,title             --jq '.[] | select(.title == "Crawl failed") | .number' |
-            head -n 1)"
+          existing="$(gh issue list --state all --limit 20 --search 'in:title "Crawl failed"' --json number,title --jq '.[] | select(.title == "Crawl failed") | .number' | head -n 1)"
 
           body="Scheduled crawl failed. See run: ${run_url}"
 
