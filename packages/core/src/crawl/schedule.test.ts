@@ -97,7 +97,7 @@ describe('selectBatch', () => {
       record('com.example.one', 'not_registered', START, {
         errorCount: 1,
         lastError: {
-          at: '2026-01-01T23:00:00.000Z',
+          at: '2026-01-02T08:30:00.000Z',
           code: 'TRANSIENT_ERROR',
           message: 'one',
         },
