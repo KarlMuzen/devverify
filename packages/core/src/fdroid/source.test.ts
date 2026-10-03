@@ -129,12 +129,14 @@ describe('createFdroidSource', () => {
       headers: new Headers({ 'Content-Type': 'application/json' }),
       body: {
         getReader: () => ({
-          read: async () => ({
-            done: false,
-            value: { byteLength: MAX_SIGNER_INDEX_BYTES + 1 } as Uint8Array,
-          }),
-          cancel: async () => {
+          read: () =>
+            Promise.resolve({
+              done: false,
+              value: { byteLength: MAX_SIGNER_INDEX_BYTES + 1 } as Uint8Array,
+            }),
+          cancel: () => {
             cancelled = true;
+            return Promise.resolve();
           },
         }),
       },
