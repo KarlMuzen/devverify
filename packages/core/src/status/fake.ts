@@ -41,7 +41,7 @@ function stateFor(seed: string, packageName: string): ApiState {
 /** Creates a seeded client that never performs network I/O. */
 export function createFakeStatusClient({ seed }: { seed: string }): FakeStatusClient {
   return {
-    check(packageName, fingerprint) {
+    async check(packageName, fingerprint) {
       const pkg = assertPackageName(packageName);
       const normalizedFingerprint =
         fingerprint === undefined ? undefined : normalizeFingerprint(fingerprint);
