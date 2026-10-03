@@ -7,11 +7,11 @@ import {
   DEFAULT_MAX_FINGERPRINTS,
   resultJson,
   runCrawl,
-  writeStepSummary,
   type CrawlOptions,
 } from './runner.js';
 
-export { runCrawl, resultJson, writeStepSummary } from './runner.js';
+export { runCrawl, resultJson } from './runner.js';
+export { writeStepSummary } from './summary.js';
 export type {
   CrawlCounts,
   CrawlExitReason,
