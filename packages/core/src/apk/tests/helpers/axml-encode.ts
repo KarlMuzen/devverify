@@ -158,7 +158,8 @@ function element(
 function endElement(pool: ReadonlyMap<string, number>, name: string): Uint8Array {
   const nameIndex = pool.get(name);
   if (nameIndex === undefined) throw new Error('Unknown test element.');
-  return chunk(0x0103, concat(u32(1), u32(0xffffffff), u32(0xffffffff), u32(nameIndex)));
+  const body = concat(u32(1), u32(0xffffffff), u32(0xffffffff), u32(nameIndex));
+  return concat(u16(0x0103), u16(16), u32(24), body);
 }
 
 export function encodeManifest(options: {
