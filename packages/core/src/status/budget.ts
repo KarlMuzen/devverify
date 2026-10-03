@@ -1,13 +1,13 @@
 import { DevVerifyError } from '../errors.js';
 
-export class BudgetExhaustedError extends DevVerifyError {
+/** Raised when an operation would exceed its request budget. */\nexport class BudgetExhaustedError extends DevVerifyError {
   public constructor(message = 'Status API request budget exhausted.') {
     super('BUDGET_EXHAUSTED', message);
     this.name = 'BudgetExhaustedError';
   }
 }
 
-export class RequestBudget {
+/** Mutable counter used to charge every outbound HTTP attempt. */\nexport class RequestBudget {
   public readonly limit: number;
   private remainingRequests: number;
 
@@ -23,7 +23,7 @@ export class RequestBudget {
     this.remainingRequests = limit;
   }
 
-  public take(): void {
+  /** Charges one request or throws before the attempt is sent. */\n  public take(): void {
     if (this.remainingRequests <= 0) {
       throw new BudgetExhaustedError();
     }
