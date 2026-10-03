@@ -62,7 +62,7 @@ export async function runCrawl(
     );
   }
 
-  let sourceSnapshot;
+  let sourceSnapshot: Awaited<ReturnType<typeof loadSource>>;
   try {
     sourceSnapshot = await loadSource(options, data, now);
   } catch (error) {
