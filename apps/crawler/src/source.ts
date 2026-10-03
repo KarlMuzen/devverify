@@ -6,7 +6,6 @@ import {
   parseSignerIndex,
   type AppRecord,
   type AppStatus,
-  type MutableCrawlData,
   type SourceSnapshot,
 } from '@devverify/core';
 import { DataStoreError } from '@devverify/core/node';
@@ -16,6 +15,7 @@ import type {
   CrawlOptions,
   CrawlResult,
   LoadedSource,
+  MutableCrawlData,
 } from './types.js';
 
 export function normalizeNow(value?: string): string {
