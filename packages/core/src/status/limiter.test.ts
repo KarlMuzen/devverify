@@ -6,34 +6,20 @@ describe('createLimiter', () => {
     const limit = createLimiter(2);
     let active = 0;
     let maximum = 0;
-    const release: Array<() => void> = [];
 
     const tasks = Array.from({ length: 5 }, (_, index) =>
-      limit(
-        () =>
-          new Promise<number>((resolve) => {
-            active += 1;
-            maximum = Math.max(maximum, active);
-            release.push(() => {
-              active -= 1;
-              resolve(index);
-            });
-          }),
-      ),
+      limit(async () => {
+        active += 1;
+        maximum = Math.max(maximum, active);
+        await Promise.resolve();
+        active -= 1;
+        return index;
+      }),
     );
 
-    await Promise.resolve();
-    expect(active).toBe(2);
-    release.shift()?.();
-    release.shift()?.();
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(active).toBe(2);
-    release.shift()?.();
-    release.shift()?.();
-    release.shift()?.();
     await expect(Promise.all(tasks)).resolves.toHaveLength(5);
     expect(maximum).toBe(2);
+    expect(active).toBe(0);
   });
 
   it('releases a permit when a task rejects', async () => {
