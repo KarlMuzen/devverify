@@ -97,7 +97,7 @@ describe('selectBatch', () => {
       record('com.example.one', 'not_registered', START, {
         errorCount: 1,
         lastError: {
-          at: '2026-01-02T08:30:00.000Z',
+          at: START,
           code: 'TRANSIENT_ERROR',
           message: 'one',
         },
@@ -115,7 +115,16 @@ describe('selectBatch', () => {
     expect(
       selectBatch({
         records,
-        now: '2026-01-02T00:00:00.000Z',
+        now: '2026-01-01T01:00:00.000Z',
+        budget: 10,
+        config: { maxPackages: 10 },
+      }),
+    ).toEqual([]);
+
+    expect(
+      selectBatch({
+        records,
+        now: '2026-01-01T03:00:00.000Z',
         budget: 10,
         config: { maxPackages: 10 },
       }),
@@ -124,11 +133,11 @@ describe('selectBatch', () => {
     expect(
       selectBatch({
         records,
-        now: '2026-01-02T09:00:00.000Z',
+        now: '2026-01-01T09:00:00.000Z',
         budget: 10,
         config: { maxPackages: 10 },
       }),
-    ).toEqual(['com.example.two', 'com.example.one']);
+    ).toEqual(['com.example.one', 'com.example.two']);
   });
 
   it('excludes removed records and is deterministic', () => {
@@ -194,7 +203,12 @@ describe('selectBatch', () => {
       return record('com.example.' + index.toString().padStart(4, '0'), status);
     });
 
-    const lastChecked = new Map<string, Date>(records.map((item) => [item.package, start]));
+    const statusByPackage = new Map(
+      records.map((item) => [item.package, item.status]),
+    );
+    const lastChecked = new Map<string, Date>(
+      records.map((item) => [item.package, start]),
+    );
     let maxNotRegisteredWait = 0;
     let maxAnyWait = 0;
 
@@ -214,8 +228,7 @@ describe('selectBatch', () => {
         if (previous !== undefined) {
           const waitDays = (now.getTime() - previous.getTime()) / 86_400_000;
           maxAnyWait = Math.max(maxAnyWait, waitDays);
-          const selectedRecord = records.find((item) => item.package === packageName);
-          if (selectedRecord?.status === 'not_registered') {
+          if (statusByPackage.get(packageName) === 'not_registered') {
             maxNotRegisteredWait = Math.max(maxNotRegisteredWait, waitDays);
           }
         }
