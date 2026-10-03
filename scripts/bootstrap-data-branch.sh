@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-remote="${2:-origin}"
+remote="${1:-origin}"
 
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
@@ -16,7 +16,11 @@ if git show-ref --verify --quiet "refs/remotes/${remote}/data"; then
   exit 1
 fi
 
-if git ls-remote --exit-code --heads "$remote" data >/dev/null 2>&1; then
+remote_refs="$(git ls-remote --heads "$remote" refs/heads/data)" || {
+  echo "Unable to query remote ${remote}; refusing to create data." >&2
+  exit 1
+}
+if [[ -n "$remote_refs" ]]; then
   echo "Refusing to create data: remote ${remote}/data already exists." >&2
   exit 1
 fi
