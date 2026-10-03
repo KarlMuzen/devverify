@@ -6,7 +6,7 @@ import {
   parseSignerIndex,
   type AppRecord,
   type AppStatus,
-  type DataSet,
+  type MutableCrawlData,
   type SourceSnapshot,
 } from '@devverify/core';
 import { DataStoreError } from '@devverify/core/node';
@@ -77,7 +77,7 @@ export async function loadFixtureSnapshot(
 
 export async function loadSource(
   options: CrawlOptions,
-  data: DataSet,
+  data: MutableCrawlData,
   now: string,
 ): Promise<LoadedSource> {
   const source =
@@ -111,7 +111,7 @@ export async function loadSource(
 }
 
 export function updateSourceMeta(
-  data: DataSet,
+  data: MutableCrawlData,
   source: LoadedSource,
 ): void {
   const stored = data.meta.sources[source.source.id];
