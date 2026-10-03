@@ -13,7 +13,6 @@ import {
   DataFormatError,
   parseAppsNdjson,
   parseEventsNdjson,
-  parseMetaJson,
   parseTimeseriesCsv,
   toMetaJson,
   toNdjson,
