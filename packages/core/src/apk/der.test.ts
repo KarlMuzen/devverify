@@ -74,7 +74,7 @@ describe('minimal DER reader', () => {
       'APK_DER_NON_MINIMAL_TAG',
     );
     expectErrorCode(
-      () => parseDer(new Uint8Array([0x1f, 0x82, 0x82, 0x82, 0x7f, 0x00])),
+      () => parseDer(new Uint8Array([0x1f, 0xff, 0xff, 0xff, 0xff, 0x7f, 0x00])),
       'APK_DER_TAG_OVERFLOW',
     );
   });

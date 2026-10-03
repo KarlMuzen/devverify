@@ -245,7 +245,7 @@ describe('APK v1/JAR signatures', () => {
           tlv(0xa0, makeSignedData(certificateSet, sequence())),
         ),
       ),
-      'APK_DER_SET',
+      'APK_V1_SIGNER_INFOS',
     );
 
     const signerWithUnexpectedSid = sequence(
