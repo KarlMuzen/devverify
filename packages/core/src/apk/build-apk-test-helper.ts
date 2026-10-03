@@ -75,18 +75,18 @@ async function deflateRaw(data: Uint8Array): Promise<Uint8Array> {
 
 function buildSignedData(signer: TestSigner): Uint8Array {
   const digest = concat(u32(1), lp32(new Uint8Array([1, 2, 3])));
-  const certs = lp32(lp32(signer.certificate));
+  const digests = lp32(signingSequence([digest]));
+  const certs = lp32(signingSequence([signer.certificate]));
   const sdk =
     signer.scheme === 'v2'
       ? new Uint8Array()
       : concat(u32(signer.minSdk ?? 21), u32(signer.maxSdk ?? 35));
   const attributes = signer.hasRotationLineage
-    ? lp32(concat(
-        u32(0x3ba06f8c),
-        new Uint8Array([1, 2, 3, 4]),
-      ))
+    ? lp32(signingSequence([
+        concat(u32(0x3ba06f8c), new Uint8Array([1, 2, 3, 4])),
+      ]))
     : lp32(new Uint8Array());
-  return concat(lp32(digest), certs, sdk, attributes);
+  return concat(digests, certs, sdk, attributes);
 }
 
 function buildSigner(signer: TestSigner): Uint8Array {
