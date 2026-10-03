@@ -6,6 +6,7 @@ import {
   selectBatch,
   syncRecords,
   type DataSet,
+  type StatusClient,
 } from '@devverify/core';
 import { createDataStore } from '@devverify/core/node';
 import {
