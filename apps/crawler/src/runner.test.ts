@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   AuthError,
+  BudgetExhaustedError,
   QuotaExhaustedError,
   SourceFetchError,
   TransientError,
@@ -255,7 +256,7 @@ describe('runCrawl', () => {
   it('saves partial progress and exits 0 when the budget is exhausted', async () => {
     const dir = await cloneSample();
     const client = clientFor(async () => {
-      throw new (await import('@devverify/core')).BudgetExhaustedError();
+      throw new BudgetExhaustedError();
     });
 
     const before = await snapshot(dir);
