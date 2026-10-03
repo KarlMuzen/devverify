@@ -4,6 +4,7 @@ import {
   QuotaExhaustedError,
   applyCheckResult,
   checkFingerprints,
+  computeTimeseriesRow,
   createFakeStatusClient,
   createStatusClient,
   type AppRecord,
@@ -122,4 +123,13 @@ export function errorRecord(
   apiKey?: string,
 ): { code: string; message: string } {
   return safeError(error, apiKey);
+}
+
+
+export function replaceTimeseriesRow(data: DataSet, now: string): void {
+  const row = computeTimeseriesRow(data.apps, new Date(now));
+  data.timeseries = [
+    ...data.timeseries.filter((item) => item.date !== row.date),
+    row,
+  ].sort((a, b) => a.date.localeCompare(b.date));
 }
