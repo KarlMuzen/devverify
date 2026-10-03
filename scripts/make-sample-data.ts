@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import {
   toMetaJson,
   toNdjson,
@@ -137,7 +137,6 @@ async function main(): Promise<void> {
   await writeFile(join(directory, 'events.ndjson'), toNdjson(buildEvents()), 'utf8');
   await writeFile(join(directory, 'timeseries.csv'), toTimeseriesCsv(buildTimeseries()), 'utf8');
   await writeFile(join(directory, 'meta.json'), toMetaJson(buildMeta()), 'utf8');
-  void dirname;
 }
 
 await main();
