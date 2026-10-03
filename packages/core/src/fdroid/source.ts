@@ -135,7 +135,13 @@ function snapshot(
 }
 
 export function createFdroidSource({ url }: FdroidSourceOptions): PackageSource {
-  const parsedUrl = new URL(url);
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    throw new SourceFetchError('F-Droid signer-index URL is invalid.');
+  }
+
   if (parsedUrl.protocol !== 'https:') {
     throw new SourceFetchError('F-Droid signer-index URL must use HTTPS.');
   }
