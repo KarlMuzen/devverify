@@ -40,4 +40,23 @@ export { createLimiter, type Limiter, type LimitTask } from './status/limiter.js
 export { createFakeStatusClient, type FakeStatusClient } from './status/fake.js';
 export { redactSecrets } from './status/redact.js';
 
+export {
+  type PackageSource,
+  type SourceLoadOptions,
+  type SourceSnapshot,
+  type SourceValidators,
+  SourceFetchError,
+  SourceFormatError,
+} from './source.js';
+export {
+  createFdroidSource,
+  FDROID_SIGNER_INDEX_URL,
+  MAX_SIGNER_INDEX_BYTES,
+  SIGNER_INDEX_TIMEOUT_MS,
+  parseSignerIndex,
+  type ParsedSignerIndex,
+  type SignerIndexEntry,
+  type SignerIndexShape,
+} from './fdroid/index.js';
+
 export const PACKAGE_NAME = '@devverify/core';
