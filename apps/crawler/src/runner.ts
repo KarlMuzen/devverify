@@ -1,11 +1,10 @@
 import {
   applyCheckError,
-  createDataStore,
+  
   createLimiter,
   RequestBudget,
   selectBatch,
   syncRecords,
-  type AppRecord,
   type DataSet,
 } from '@devverify/core';
 import {
@@ -69,7 +68,7 @@ export async function runCrawl(
     return failureResult(30, 'source_fetch_failed', options.budget, data.apps, safeError(error, options.apiKey).message);
   }
 
-  const { source, snapshot } = sourceSnapshot;
+  const { snapshot } = sourceSnapshot;
   const warnings = [...snapshot.warnings];
   const sync = snapshot.notModified
     ? {
