@@ -122,6 +122,31 @@ describe('createFdroidSource', () => {
     });
   });
 
+  it('rejects a streamed body over 50 MiB without a Content-Length header', async () => {
+    let cancelled = false;
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue({
+      status: 200,
+      headers: new Headers({ 'Content-Type': 'application/json' }),
+      body: {
+        getReader: () => ({
+          read: async () => ({
+            done: false,
+            value: { byteLength: MAX_SIGNER_INDEX_BYTES + 1 } as Uint8Array,
+          }),
+          cancel: async () => {
+            cancelled = true;
+          },
+        }),
+      },
+    } as unknown as Response);
+    const source = createFdroidSource({ url: FDROID_SIGNER_INDEX_URL });
+
+    await expect(source.load({ fetch: fetcher })).rejects.toMatchObject({
+      code: 'SOURCE_FETCH_ERROR',
+    });
+    expect(cancelled).toBe(true);
+  });
+
   it('rejects invalid JSON as SourceFormatError', async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
       jsonResponse('not-json'),
