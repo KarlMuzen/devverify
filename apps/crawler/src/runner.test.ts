@@ -180,7 +180,7 @@ describe('runCrawl', () => {
 
   it('continues after ordinary check errors and persists error records', async () => {
     const dir = await cloneSample();
-    const client = clientFor(async () => {
+    const client = clientFor(() => {
       throw new TransientError('temporary');
     });
 
@@ -207,7 +207,7 @@ describe('runCrawl', () => {
 
   it('saves partial progress and exits 0 on quota exhaustion', async () => {
     const dir = await cloneSample();
-    const client = clientFor(async () => {
+    const client = clientFor(() => {
       throw new QuotaExhaustedError('quota exhausted');
     });
 
@@ -231,7 +231,7 @@ describe('runCrawl', () => {
 
   it('saves partial progress and exits 0 when the budget is exhausted', async () => {
     const dir = await cloneSample();
-    const client = clientFor(async () => {
+    const client = clientFor(() => {
       throw new BudgetExhaustedError();
     });
 
