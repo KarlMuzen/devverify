@@ -113,7 +113,7 @@ export function createVirtualSource(
           const copyStart = Math.max(offset, patch.offset);
           const copyEnd = Math.min(offset + length, patchEnd);
           result.set(
-            patch.data.subarray(copyStart - patch.offset, copyEnd - offset),
+            patch.data.subarray(copyStart - patch.offset, copyEnd - patch.offset),
             copyStart - offset,
           );
         }
