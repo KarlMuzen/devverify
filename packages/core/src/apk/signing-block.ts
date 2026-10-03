@@ -3,19 +3,15 @@ import { ApkParseError } from './source.js';
 import { findEocd } from './eocd.js';
 import { parseSchemeValue } from './scheme-parser.js';
 import { Cursor, readId } from './signing-cursor.js';
-import {
-  MAX_SIGNING_BLOCK_BYTES,
-  MAX_SIGNERS,
-  type ApkSigner,
-  type ApkSignerScheme,
-} from './signing-limits.js';
-import type { ApkSigner as ApkSignerType } from './signing-block-types.js';
+import { MAX_SIGNERS } from './signing-limits.js';
+import type { ApkSigner as ApkSignerType, ApkSignerScheme } from './signing-block-types.js';
 
 export const APK_SIG_BLOCK_MAGIC = new TextEncoder().encode('APK Sig Block 42');
 export const V2_BLOCK_ID = 0x7109871a;
 export const V3_BLOCK_ID = 0xf05368c0;
 export const V31_BLOCK_ID = 0x1b93ad61;
 export const PROOF_OF_ROTATION_ATTRIBUTE_ID = 0x3ba06f8c;
+export { MAX_CERTIFICATE_BYTES, MAX_CERTIFICATES, MAX_SIGNERS } from './signing-limits.js';
 export { MAX_CERTIFICATE_BYTES, MAX_CERTIFICATES, MAX_SIGNERS } from './signing-limits.js';
 export type { ApkSigner, ApkSignerScheme } from './signing-block-types.js';
 
