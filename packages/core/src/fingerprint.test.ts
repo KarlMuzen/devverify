@@ -27,6 +27,9 @@ describe('fingerprints', () => {
     HEX_FINGERPRINT.slice(0, 63),
     `${HEX_FINGERPRINT}0`,
     HEX_FINGERPRINT.replace('a', 'g'),
+    `:${HEX_FINGERPRINT}`,
+    `${HEX_FINGERPRINT}:`,
+    `${HEX_FINGERPRINT.slice(0, 2)}:${HEX_FINGERPRINT.slice(2)}`,
   ])('rejects invalid fingerprint %s', (input) => {
     expect(() => normalizeFingerprint(input)).toThrow(FingerprintError);
   });

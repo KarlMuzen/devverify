@@ -1,7 +1,7 @@
 import { DevVerifyError } from './errors.js';
 
-const HEX = /^[0-9a-fA-F]+$/;
-const FINGERPRINT_LENGTH = 64;
+const HEX_FINGERPRINT = /^[0-9a-fA-F]{64}$/;
+const COLON_FINGERPRINT = /^(?:[0-9a-fA-F]{2}:){31}[0-9a-fA-F]{2}$/;
 
 export type FingerprintFormat = 'hex' | 'colon-upper';
 
@@ -16,14 +16,11 @@ export class FingerprintError extends DevVerifyError {
  * Normalizes a SHA-256 certificate fingerprint to lowercase hexadecimal.
  */
 export function normalizeFingerprint(input: string): string {
-  const compact = input.replaceAll(':', '');
-  if (
-    compact.length !== FINGERPRINT_LENGTH ||
-    !HEX.test(compact)
-  ) {
+  if (!HEX_FINGERPRINT.test(input) && !COLON_FINGERPRINT.test(input)) {
     throw new FingerprintError(`Invalid fingerprint: ${input}`);
   }
-  return compact.toLowerCase();
+
+  return input.replaceAll(':', '').toLowerCase();
 }
 
 /**
