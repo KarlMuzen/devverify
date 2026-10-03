@@ -1,9 +1,11 @@
 import type {
   AppRecord,
   EventRecord,
+  Meta,
   PackageSource,
   SourceSnapshot,
   StatusClient,
+  TimeseriesRow,
 } from '@devverify/core';
 
 export interface CrawlOptions {
@@ -65,3 +67,11 @@ export interface LoadedSource {
   snapshot: SourceSnapshot;
 }
 
+
+
+export interface MutableCrawlData {
+  apps: AppRecord[];
+  events: EventRecord[];
+  timeseries: TimeseriesRow[];
+  meta: Meta;
+}
