@@ -1,4 +1,5 @@
 import { ApkParseError } from './source.js';
+import { optionalString, parseStringPool, stringAt, type StringPool } from './axml-strings.js';
 
 export const MAX_MANIFEST_BYTES = 8 * 1024 * 1024;
 
@@ -9,11 +10,9 @@ const START_NAMESPACE = 0x0100;
 const END_NAMESPACE = 0x0101;
 const START_ELEMENT = 0x0102;
 const END_ELEMENT = 0x0103;
-const UTF8_FLAG = 0x00000100;
 const VALUE_STRING = 0x03;
 const VALUE_INT_DEC = 0x10;
 const VALUE_INT_HEX = 0x11;
-const NO_INDEX = 0xffffffff;
 const ANDROID_NS = 'http://schemas.android.com/apk/res/android';
 
 export interface ParsedManifest {
@@ -22,10 +21,6 @@ export interface ParsedManifest {
   readonly versionName?: string;
   readonly minSdk?: number;
   readonly targetSdk?: number;
-}
-
-interface StringPool {
-  readonly strings: string[];
 }
 
 interface Attribute {
@@ -87,130 +82,13 @@ function chunkBounds(
   return { type, headerSize, size };
 }
 
-function readLength8(bytes: Uint8Array, offset: number): { readonly length: number; readonly next: number } {
-  requireRange(bytes, offset, 1, 'APK_AXML_STRING_TRUNCATED');
-  const first = bytes[offset] ?? 0;
-  if ((first & 0x80) === 0) return { length: first, next: offset + 1 };
-  requireRange(bytes, offset, 2, 'APK_AXML_STRING_TRUNCATED');
-  return {
-    length: ((first & 0x7f) << 8) | (bytes[offset + 1] ?? 0),
-    next: offset + 2,
-  };
-}
-
-function readLength16(bytes: Uint8Array, offset: number): { readonly length: number; readonly next: number } {
-  const first = readU16(bytes, offset, 'APK_AXML_STRING_TRUNCATED');
-  if ((first & 0x8000) === 0) return { length: first, next: offset + 2 };
-  const second = readU16(bytes, offset + 2, 'APK_AXML_STRING_TRUNCATED');
-  return {
-    length: ((first & 0x7fff) << 16) | second,
-    next: offset + 4,
-  };
-}
-
-function decodeUtf8(bytes: Uint8Array, offset: number, length: number): string {
-  requireRange(bytes, offset, length + 1, 'APK_AXML_STRING_TRUNCATED');
-  if (bytes[offset + length] !== 0) {
-    fail('APK_AXML_STRING_TERMINATOR', 'UTF-8 string is missing its terminator.');
-  }
-  try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(bytes.subarray(offset, offset + length));
-  } catch {
-    return fail('APK_AXML_STRING_ENCODING', 'UTF-8 string is invalid.');
-  }
-}
-
-function decodeUtf16(bytes: Uint8Array, offset: number, length: number): string {
-  const byteLength = length * 2;
-  requireRange(bytes, offset, byteLength + 2, 'APK_AXML_STRING_TRUNCATED');
-  if (readU16(bytes, offset + byteLength, 'APK_AXML_STRING_TERMINATOR') !== 0) {
-    fail('APK_AXML_STRING_TERMINATOR', 'UTF-16 string is missing its terminator.');
-  }
-  const chunks: string[] = [];
-  for (let cursor = 0; cursor < length; cursor += 4096) {
-    const end = Math.min(length, cursor + 4096);
-    const units: number[] = [];
-    for (let index = cursor; index < end; index += 1) {
-      units.push(readU16(bytes, offset + index * 2, 'APK_AXML_STRING_TRUNCATED'));
-    }
-    chunks.push(String.fromCharCode(...units));
-  }
-  return chunks.join('');
-}
-
-function parseStringPool(
-  bytes: Uint8Array,
-  offset: number,
-  size: number,
-  headerSize: number,
-): StringPool {
-  if (headerSize < 28 || size < headerSize) {
-    fail('APK_AXML_STRING_POOL', 'String-pool header is invalid.');
-  }
-  const count = readU32(bytes, offset + 8, 'APK_AXML_STRING_POOL');
-  const styleCount = readU32(bytes, offset + 12, 'APK_AXML_STRING_POOL');
-  const flags = readU32(bytes, offset + 16, 'APK_AXML_STRING_POOL');
-  const stringsStart = readU32(bytes, offset + 20, 'APK_AXML_STRING_POOL');
-  if (stringsStart > size) {
-    fail('APK_AXML_STRING_POOL', 'String-pool string-data offset is invalid.');
-  }
-
-  const offsetsStart = offset + headerSize;
-  const offsetsLength = count * 4;
-  requireRange(bytes, offsetsStart, offsetsLength, 'APK_AXML_STRING_POOL');
-  const stringsOffset = offset + stringsStart;
-  const stringsLength = size - stringsStart;
-  requireRange(bytes, stringsOffset, stringsLength, 'APK_AXML_STRING_POOL');
-
-  if (styleCount > 0) {
-    const stylesStart = readU32(bytes, offset + 24, 'APK_AXML_STRING_POOL');
-    if (stylesStart !== 0) {
-      if (stylesStart > size) {
-        fail('APK_AXML_STRING_POOL', 'String-pool style-data offset is invalid.');
-      }
-      requireRange(bytes, offset + stylesStart, size - stylesStart, 'APK_AXML_STRING_POOL');
-    }
-  }
-
-  const strings: string[] = [];
-  for (let index = 0; index < count; index += 1) {
-    const relative = readU32(bytes, offsetsStart + index * 4, 'APK_AXML_STRING_POOL');
-    if (relative >= stringsLength) {
-      fail('APK_AXML_STRING_INDEX', 'String-pool offset is outside the chunk.');
-    }
-    const stringOffset = stringsOffset + relative;
-    if ((flags & UTF8_FLAG) !== 0) {
-      const charLength = readLength8(bytes, stringOffset);
-      const byteLength = readLength8(bytes, charLength.next);
-      strings.push(decodeUtf8(bytes, byteLength.next, byteLength.length));
-    } else {
-      const stringLength = readLength16(bytes, stringOffset);
-      strings.push(decodeUtf16(bytes, stringLength.next, stringLength.length));
-    }
-  }
-  return { strings };
-}
-
-function stringAt(pool: StringPool, index: number): string {
-  if (index === NO_INDEX) return '';
-  const value = pool.strings[index];
-  if (value === undefined) fail('APK_AXML_STRING_INDEX', 'String-pool index is invalid.');
-  return value;
-}
-
-function optionalString(pool: StringPool, index: number): string | undefined {
-  return index === NO_INDEX ? undefined : stringAt(pool, index);
-}
-
 function parseAttribute(
   bytes: Uint8Array,
   pool: StringPool,
   offset: number,
   attributeSize: number,
 ): Attribute {
-  if (attributeSize < 20) {
-    fail('APK_AXML_ATTRIBUTE', 'Android attribute size is too small.');
-  }
+  if (attributeSize < 20) fail('APK_AXML_ATTRIBUTE', 'Android attribute size is too small.');
   const namespace = optionalString(pool, readU32(bytes, offset));
   const name = stringAt(pool, readU32(bytes, offset + 4));
   const valueType = bytes[offset + 15];
@@ -218,13 +96,12 @@ function parseAttribute(
   if (readU16(bytes, offset + 12) !== 8 || bytes[offset + 14] !== 0 || valueType === undefined) {
     fail('APK_AXML_ATTRIBUTE', 'Android attribute typed-value header is invalid.');
   }
-  const value = valueType === VALUE_STRING ? stringAt(pool, valueData) : undefined;
   return {
     namespace,
     name,
     type: valueType,
     data: valueData,
-    value,
+    value: valueType === VALUE_STRING ? stringAt(pool, valueData) : undefined,
   };
 }
 
@@ -234,9 +111,7 @@ function parseStartElement(
   offset: number,
   size: number,
 ): Element {
-  if (size < 36) {
-    fail('APK_AXML_ELEMENT', 'Start-element chunk is too small.');
-  }
+  if (size < 36) fail('APK_AXML_ELEMENT', 'Start-element chunk is too small.');
   const name = stringAt(pool, readU32(bytes, offset + 20));
   const attributeStart = readU16(bytes, offset + 24);
   const attributeSize = readU16(bytes, offset + 26);
@@ -270,9 +145,10 @@ function findAttribute(
 }
 
 function readIntegerAttribute(attribute: Attribute | undefined): number | undefined {
-  if (attribute === undefined) return undefined;
-  if (attribute.type !== VALUE_INT_DEC && attribute.type !== VALUE_INT_HEX) return undefined;
-  return attribute.data;
+  return attribute !== undefined &&
+    (attribute.type === VALUE_INT_DEC || attribute.type === VALUE_INT_HEX)
+    ? attribute.data
+    : undefined;
 }
 
 /**
@@ -321,30 +197,19 @@ export function parseBinaryXml(bytes: Uint8Array): ParsedManifest {
           }
           root = element;
           rootDepth = depth;
-          const packageAttribute = findAttribute(element, undefined, 'package');
-          const packageName = packageAttribute?.value;
+          const packageName = findAttribute(element, undefined, 'package')?.value;
           if (packageName === undefined || packageName.length === 0) {
             fail('APK_AXML_MANIFEST', 'Android manifest package attribute is missing.');
           }
-          const versionCode = readIntegerAttribute(
-            findAttribute(element, ANDROID_NS, 'versionCode'),
-          );
-          const versionNameAttribute = findAttribute(element, ANDROID_NS, 'versionName');
-          const versionName =
-            versionNameAttribute?.type === VALUE_STRING ? versionNameAttribute.value : undefined;
+          const versionCode = readIntegerAttribute(findAttribute(element, ANDROID_NS, 'versionCode'));
+          const versionName = findAttribute(element, ANDROID_NS, 'versionName');
           manifest = {
             packageName,
             ...(versionCode === undefined ? {} : { versionCode }),
-            ...(versionName === undefined ? {} : { versionName }),
+            ...(versionName?.type === VALUE_STRING ? { versionName: versionName.value } : {}),
           };
-        } else if (
-          element.name === 'uses-sdk' &&
-          depth === rootDepth + 1 &&
-          manifest !== undefined
-        ) {
-          const minSdk = readIntegerAttribute(
-            findAttribute(element, ANDROID_NS, 'minSdkVersion'),
-          );
+        } else if (element.name === 'uses-sdk' && depth === rootDepth + 1 && manifest !== undefined) {
+          const minSdk = readIntegerAttribute(findAttribute(element, ANDROID_NS, 'minSdkVersion'));
           const targetSdk = readIntegerAttribute(
             findAttribute(element, ANDROID_NS, 'targetSdkVersion'),
           );
@@ -359,8 +224,7 @@ export function parseBinaryXml(bytes: Uint8Array): ParsedManifest {
       case END_ELEMENT: {
         requireRange(bytes, cursor, 24, 'APK_AXML_ELEMENT');
         const name = stringAt(pool, readU32(bytes, cursor + 20));
-        const open = stack.pop();
-        if (open !== name) {
+        if (stack.pop() !== name) {
           fail('APK_AXML_ELEMENT', 'Android binary XML element nesting is invalid.');
         }
         depth -= 1;
