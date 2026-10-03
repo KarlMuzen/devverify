@@ -20,23 +20,23 @@ import {
 import { parseErrorMessage, parseSuccess } from './protocol.js';
 import { buildStatusUrl, fetchWithTimeout, RequestTimeoutError } from './transport.js';
 
-export const STATUS_API_BASE_URL = 'https://androiddeveloperidstatus.googleapis.com';
+/** Android Developer ID Status API base URL. */\nexport const STATUS_API_BASE_URL = 'https://androiddeveloperidstatus.googleapis.com';
 
-export interface StatusCheckResult {
+/** Normalized result returned by a status check. */\nexport interface StatusCheckResult {
   package: string;
   fingerprint?: string;
   state: ReturnType<typeof parseSuccess>['state'];
   rawState: string;
 }
 
-export interface StatusRequestInfo {
+/** Safe request telemetry emitted before each HTTP attempt. */\nexport interface StatusRequestInfo {
   package: string;
   fingerprint?: string;
   url: string;
   attempt: number;
 }
 
-export interface StatusClientOptions {
+/** Configuration for the injected, isomorphic Status API client. */\nexport interface StatusClientOptions {
   apiKey: string;
   fetch?: typeof fetch;
   baseUrl?: string;
@@ -49,7 +49,7 @@ export interface StatusClientOptions {
   onRequest?: (info: StatusRequestInfo) => void;
 }
 
-export interface StatusClient {
+/** Minimal Status API client contract used by callers and fakes. */\nexport interface StatusClient {
   check(packageName: string, fingerprint?: string): Promise<StatusCheckResult>;
 }
 
@@ -98,7 +98,7 @@ function isRetryableStatus(status: number): boolean {
   return status >= 500 && status <= 599;
 }
 
-export function createStatusClient(options: StatusClientOptions): StatusClient {
+/** Creates a Status API client with bounded retries and an optional request budget. */\nexport function createStatusClient(options: StatusClientOptions): StatusClient {
   validateOptions(options);
 
   const fetcher = options.fetch ?? globalThis.fetch;
