@@ -35,6 +35,7 @@ import {
   finishSummary,
   saveCrawlData,
 } from './finish.js';
+import { loadCrawlData } from './dataset.js';
 
 export const DEFAULT_BUDGET = 950;
 export const DEFAULT_CONCURRENCY = 4;
@@ -52,13 +53,7 @@ export async function runCrawl(
   const store = createDataStore(options.dataDir);
   let data: MutableCrawlData;
   try {
-    const loaded = await store.load();
-    data = {
-      apps: [...loaded.apps],
-      events: [...loaded.events],
-      timeseries: [...loaded.timeseries],
-      meta: loaded.meta,
-    };
+    data = await loadCrawlData(store, options.dataDir, options.dryRun);
   } catch (error) {
     return failureResult(
       40,
