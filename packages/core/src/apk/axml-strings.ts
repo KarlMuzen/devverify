@@ -28,12 +28,12 @@ function requireRange(bytes: Uint8Array, offset: number, length: number): void {
   }
 }
 
-function readU16(bytes: Uint8Array, offset: number, code = 'APK_AXML_STRING_TRUNCATED'): number {
+function readU16(bytes: Uint8Array, offset: number): number {
   requireRange(bytes, offset, 2);
   return viewOf(bytes).getUint16(offset, true);
 }
 
-function readU32(bytes: Uint8Array, offset: number, code = 'APK_AXML_STRING_POOL'): number {
+function readU32(bytes: Uint8Array, offset: number): number {
   requireRange(bytes, offset, 4);
   return viewOf(bytes).getUint32(offset, true);
 }
