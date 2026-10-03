@@ -114,3 +114,32 @@ export {
   type GuidanceOrigin,
   type GuidanceParams,
 } from './guidance/index.js';
+
+export {
+  AppStatusSchema,
+  AppRecordSchema,
+  EventRecordSchema,
+  TimeseriesRowSchema,
+  SourceMetaSchema,
+  LastRunSchema,
+  MetaSchema,
+  type AppRecord,
+  type EventRecord,
+  type TimeseriesRow,
+  type SourceMeta,
+  type LastRun,
+  type Meta,
+  type DataSet,
+} from './data/index.js';
+export {
+  DATA_FILES,
+  DataFormatError,
+  parseNdjson,
+  parseAppsNdjson,
+  parseEventsNdjson,
+  parseTimeseriesCsv,
+  parseMetaJson,
+  toNdjson,
+  toTimeseriesCsv,
+  toMetaJson,
+} from './data/index.js';
