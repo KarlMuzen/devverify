@@ -44,7 +44,7 @@ describe('minimal DER reader', () => {
     expect(() => parseDer(hex('3004020101'))).toThrowError(ApkParseError);
     expectErrorCode(() => parseDer(hex('30810100')), 'APK_DER_NON_MINIMAL_LENGTH');
     expectErrorCode(() => parseDer(hex('1f')), 'APK_DER_TRUNCATED');
-    expectErrorCode(() => parseDer(hex('1f1f00')), 'APK_DER_NON_MINIMAL_TAG');
+    expectErrorCode(() => parseDer(hex('1f802000')), 'APK_DER_NON_MINIMAL_TAG');
   });
 
   it('rejects invalid helper values and non-minimal integers', () => {
