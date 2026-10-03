@@ -108,14 +108,24 @@ function element(
     const namespace = attr.namespace === undefined ? 0xffffffff : pool.get(attr.namespace);
     const nameIndex = pool.get(attr.name);
     if (namespace === undefined || nameIndex === undefined) throw new Error('Unknown test string.');
-    const stringIndex = attr.type === 'string' ? pool.get(String(attr.value)) : undefined;
-    if (attr.type === 'string' && stringIndex === undefined) throw new Error('Unknown test string.');
-    const valueType = attr.type === 'string' ? 0x03 : 0x10;
-    const data = attr.type === 'string' ? stringIndex : Number(attr.value);
+
+    let rawValue = 0xffffffff;
+    let data = 0;
+    let valueType = 0x10;
+    if (attr.type === 'string') {
+      const stringIndex = pool.get(String(attr.value));
+      if (stringIndex === undefined) throw new Error('Unknown test string.');
+      rawValue = stringIndex;
+      data = stringIndex;
+      valueType = 0x03;
+    } else {
+      data = Number(attr.value);
+    }
+
     return concat(
       u32(namespace),
       u32(nameIndex),
-      u32(attr.type === 'string' ? stringIndex : 0xffffffff),
+      u32(rawValue),
       u16(8),
       new Uint8Array([0, valueType]),
       u32(data),
