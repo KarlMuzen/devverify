@@ -46,12 +46,10 @@ export function createBufferSource(bytes: Uint8Array): RandomAccessSource {
   return {
     size: copy.byteLength,
     read(offset: number, length: number): Promise<Uint8Array> {
-      try {
+      return Promise.resolve().then(() => {
         assertRange(copy.byteLength, offset, length);
-        return Promise.resolve(copy.slice(offset, offset + length));
-      } catch (error) {
-        return Promise.reject(error);
-      }
+        return copy.slice(offset, offset + length);
+      });
     },
   };
 }
@@ -99,7 +97,7 @@ export function createVirtualSource(
   return {
     size,
     read(offset: number, length: number): Promise<Uint8Array> {
-      try {
+      return Promise.resolve().then(() => {
         assertRange(size, offset, length);
         const result = new Uint8Array(length);
 
@@ -115,15 +113,13 @@ export function createVirtualSource(
           const copyStart = Math.max(offset, patch.offset);
           const copyEnd = Math.min(offset + length, patchEnd);
           result.set(
-            patch.data.subarray(copyStart - patch.offset, copyEnd - patch.offset),
+            patch.data.subarray(copyStart - patch.offset, copyEnd - offset),
             copyStart - offset,
           );
         }
 
-        return Promise.resolve(result);
-      } catch (error) {
-        return Promise.reject(error);
-      }
+        return result;
+      });
     },
   };
 }
