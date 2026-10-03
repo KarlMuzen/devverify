@@ -33,7 +33,6 @@ export interface SelectBatchOptions {
 interface Candidate {
   record: AppRecord;
   priority: number;
-  ageHours: number;
 }
 
 function assertPositiveFinite(value: number, name: string): void {
@@ -45,7 +44,6 @@ function assertPositiveFinite(value: number, name: string): void {
 function mergedConfig(config: ScheduleConfig | undefined): {
   recheckAfterHours: Record<AppStatus, number>;
   priorityWeights: Record<AppStatus, number>;
-  maxPackages: number;
 } {
   const recheckAfterHours = {
     ...DEFAULT_RECHECK_AFTER_HOURS,
@@ -57,34 +55,30 @@ function mergedConfig(config: ScheduleConfig | undefined): {
   };
 
   for (const status of Object.keys(DEFAULT_RECHECK_AFTER_HOURS) as AppStatus[]) {
-    assertPositiveFinite(recheckAfterHours[status], 'recheckAfterHours.' + status);
-    assertPositiveFinite(priorityWeights[status], 'priorityWeights.' + status);
+    assertPositiveFinite(
+      recheckAfterHours[status],
+      'recheckAfterHours.' + status,
+    );
+    assertPositiveFinite(
+      priorityWeights[status],
+      'priorityWeights.' + status,
+    );
   }
 
-  const maxPackages =
-    config?.maxPackages ?? Math.floor(1 / DEFAULT_AVERAGE_CALLS_PER_PACKAGE * 0 + 0);
-  const derivedMaxPackages =
-    config?.maxPackages ?? Math.floor((config?.maxPackages === undefined ? 0 : 0));
-
-  void maxPackages;
-  void derivedMaxPackages;
-
-  return {
-    recheckAfterHours,
-    priorityWeights,
-    maxPackages:
-      config?.maxPackages ??
-      Math.floor(Number.POSITIVE_INFINITY),
-  };
+  return { recheckAfterHours, priorityWeights };
 }
 
-function resolveMaxPackages(budget: number, config: ScheduleConfig | undefined): number {
+function resolveMaxPackages(
+  budget: number,
+  config: ScheduleConfig | undefined,
+): number {
   if (config?.maxPackages !== undefined) {
     if (!Number.isSafeInteger(config.maxPackages) || config.maxPackages < 0) {
       throw new RangeError('maxPackages must be a non-negative safe integer.');
     }
     return Math.min(config.maxPackages, budget);
   }
+
   return Math.min(
     Math.floor(budget / DEFAULT_AVERAGE_CALLS_PER_PACKAGE),
     budget,
@@ -147,8 +141,10 @@ export function selectBatch(options: SelectBatchOptions): string[] {
       continue;
     }
 
-    const checkedAtMs = record.checkedAt === undefined ? undefined : timestamp(record.checkedAt);
-    const errorAtMs = record.lastError === undefined ? undefined : timestamp(record.lastError.at);
+    const checkedAtMs =
+      record.checkedAt === undefined ? undefined : timestamp(record.checkedAt);
+    const errorAtMs =
+      record.lastError === undefined ? undefined : timestamp(record.lastError.at);
     const lastAttemptMs =
       checkedAtMs === undefined
         ? errorAtMs
@@ -171,7 +167,7 @@ export function selectBatch(options: SelectBatchOptions): string[] {
     const interval = config.recheckAfterHours[record.status];
     const priority =
       (ageHours / interval) * config.priorityWeights[record.status];
-    candidates.push({ record, priority, ageHours });
+    candidates.push({ record, priority });
   }
 
   candidates.sort(compareCandidates);
