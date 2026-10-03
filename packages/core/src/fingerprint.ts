@@ -45,7 +45,9 @@ export function formatFingerprint(
  * Computes the SHA-256 digest as lowercase hexadecimal.
  */
 export async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+  const input = new Uint8Array(bytes.byteLength);
+  input.set(bytes);
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', input.buffer);
   const hex = Array.from(new Uint8Array(digest), (byte) =>
     byte.toString(16).padStart(2, '0'),
   );
