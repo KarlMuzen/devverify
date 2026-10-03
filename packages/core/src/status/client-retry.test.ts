@@ -95,7 +95,7 @@ describe('status client errors, retries, and budget', () => {
   });
 
   it('throws TransientError after maxAttempts', async () => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(() =>
       response(500, { error: { message: 'server' } }),
     );
     const sleep = vi.fn<(ms: number) => Promise<void>>().mockResolvedValue(undefined);
@@ -152,7 +152,7 @@ describe('status client errors, retries, and budget', () => {
   );
 
   it('caps 429 retries at two retries', async () => {
-    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+    const fetcher = vi.fn<typeof fetch>().mockImplementation(() =>
       response(429, { error: { message: 'busy' } }, { 'Retry-After': '5' }),
     );
     const sleep = vi.fn<(ms: number) => Promise<void>>().mockResolvedValue(undefined);
@@ -232,9 +232,9 @@ describe('status client errors, retries, and budget', () => {
         timeoutMs: 1_000,
       });
       const pending = client.check('com.example.app');
+      const assertion = expect(pending).rejects.toBeInstanceOf(TransientError);
       await vi.advanceTimersByTimeAsync(1_000);
-
-      await expect(pending).rejects.toBeInstanceOf(TransientError);
+      await assertion;
     } finally {
       vi.useRealTimers();
     }
