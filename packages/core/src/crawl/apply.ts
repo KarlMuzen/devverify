@@ -48,14 +48,14 @@ export function applyCheckResult(
       result.fingerprint === undefined ? [] : [result.fingerprint],
     ),
   );
-  const { lastError: _lastError, ...withoutLastError } = record;
   const next: AppRecord = {
-    ...withoutLastError,
+    ...record,
     checkedAt: now,
     checkedFingerprints,
     status: nextStatus,
     errorCount: 0,
   };
+  delete next.lastError;
   if (nextStatus !== record.status) {
     next.statusChangedAt = now;
     const event: EventRecord = {
