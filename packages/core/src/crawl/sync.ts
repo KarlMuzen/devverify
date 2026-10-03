@@ -98,15 +98,19 @@ export function syncRecords(options: SyncOptions): SyncResult {
     removed += 1;
   }
 
-  for (const entry of [...entries.entries()].sort(([a], [b]) => a.localeCompare(b))) {
-    const packageName = entry[0];
+  const packages = [...entries.keys()].sort((a, b) => a.localeCompare(b));
+  for (const packageName of packages) {
     if (nextRecords.some((record) => record.source === options.source && record.package === packageName)) {
+      continue;
+    }
+    const fingerprints = entries.get(packageName);
+    if (fingerprints === undefined) {
       continue;
     }
     nextRecords.push({
       package: packageName,
       source: options.source,
-      fingerprints: entry[1],
+      fingerprints,
       checkedFingerprints: [],
       status: 'unknown',
       firstSeenAt: options.now,
