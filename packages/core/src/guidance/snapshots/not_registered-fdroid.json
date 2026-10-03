@@ -1,0 +1,27 @@
+{
+  "title": "Package not registered for the checked signing key",
+  "summary": "The F-Droid APK for com.example.test is not registered for the signing key checked.",
+  "steps": [
+    "Confirm the certificate used by the distributed F-Droid APK, then register that signing key for com.example.test when appropriate.",
+    "Where practical, work toward a reproducible distribution build so the published APK can carry the developer's own signing key.",
+    "Re-run the registration status check after the package and signing key are updated."
+  ],
+  "links": [
+    {
+      "label": "Check registration status",
+      "url": "https://developer.android.com/developer-verification/guides/check-registration-status"
+    },
+    {
+      "label": "Open-source app registration guide",
+      "url": "https://developer.android.com/developer-verification/guides/open-source-app-registration"
+    },
+    {
+      "label": "Limited distribution guide",
+      "url": "https://developer.android.com/developer-verification/guides/limited-distribution"
+    },
+    {
+      "label": "Full distribution guide",
+      "url": "https://developer.android.com/developer-verification/guides/full-distribution"
+    }
+  ]
+}
