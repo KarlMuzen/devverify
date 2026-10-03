@@ -1,4 +1,4 @@
-import { copyFile, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -101,6 +101,26 @@ describe('runCrawl', () => {
     expect(result.exitReason).toBe('dry_run');
     expect(result.warnings).toContain('Dry run: no dataset files were written.');
     expect(await snapshot(dir)).toEqual(before);
+  });
+
+  it('does not create a missing data directory during dry-run', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'devverify-dry-run-'));
+    tempDirs.push(parent);
+    const dataDir = join(parent, 'missing');
+
+    const result = await runCrawl({
+      dataDir,
+      budget: 20,
+      concurrency: 2,
+      dryRun: true,
+      fake: true,
+      fixtureIndex: FIXTURE_INDEX,
+      maxFingerprints: 2,
+      now: NOW,
+    });
+
+    expect(result.exitCode).toBe(0);
+    await expect(stat(dataDir)).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
   it('returns 20 for auth failure and leaves the dataset untouched', async () => {
