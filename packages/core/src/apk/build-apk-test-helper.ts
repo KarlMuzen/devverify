@@ -165,7 +165,8 @@ export async function buildApk(options: {
     const zip64 = options.zip64 === true;
     const extra = zip64
       ? concat(
-          u32(0x0001 | (0x0001 << 16)),
+          u16(0x0001),
+          u16(24),
           u64(entry.data.byteLength),
           u64(storedData.byteLength),
           u64(offset),
@@ -228,11 +229,11 @@ export async function buildApk(options: {
     const eocd = concat(
       u32(0x06054b50),
       new Uint8Array(4),
-      new Uint8Array(2),
-      new Uint8Array(2),
-      new Uint8Array(4),
-      new Uint8Array(4),
-      new Uint8Array(2),
+      new Uint8Array([0xff, 0xff]),
+      new Uint8Array([0xff, 0xff]),
+      new Uint8Array([0xff, 0xff, 0xff, 0xff]),
+      new Uint8Array([0xff, 0xff, 0xff, 0xff]),
+      new Uint8Array([0, 0]),
       comment,
     );
     suffix = concat(zip64Eocd, locator, eocd);
