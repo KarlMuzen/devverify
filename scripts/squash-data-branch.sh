@@ -22,7 +22,8 @@ fi
 git fetch "$remote" data >/dev/null
 
 local_head="$(git rev-parse refs/heads/data)"
-remote_head="$(git rev-parse "refs/remotes/${remote}/data")"
+remote_ref="refs/remotes/${remote}/data"
+remote_head="$(git rev-parse "$remote_ref")"
 
 if [[ "$local_head" != "$remote_head" ]]; then
   echo "Refusing to squash: local data is not at the current remote head." >&2
