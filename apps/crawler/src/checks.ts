@@ -9,14 +9,12 @@ import {
   createStatusClient,
   type AppRecord,
   type DataSet,
-  type EventRecord,
   type StatusCheckResult,
   type StatusClient,
 } from '@devverify/core';
 import type {
   CrawlExitReason,
   CrawlOptions,
-  CrawlResult,
   PackageOutcome,
 } from './types.js';
 import { countStatuses, safeError } from './source.js';
