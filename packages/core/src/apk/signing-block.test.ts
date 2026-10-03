@@ -81,6 +81,35 @@ describe('APK signing block parser', () => {
     await expect(extractApkSigners(createBufferSource(broken))).rejects.toMatchObject({code:'APK_SIGNING_BLOCK_U64_OVERFLOW'});
   });
 
+  it('rejects an undersized signing block before reading its body', async () => {
+    const apk = await buildApk({ entries: [{ name: 'classes.dex', data: new Uint8Array([1]) }], signers: [{ scheme: 'v2', certificate: await certificate('v2') }] });
+    const eocd = await findEocd(createBufferSource(apk));
+    const broken = new Uint8Array(apk);
+    new DataView(broken.buffer).setBigUint64(eocd.centralDirectoryOffset - 24, 23n, true);
+    await expect(readSigningBlock(createBufferSource(broken), eocd.centralDirectoryOffset)).rejects.toMatchObject({ code: 'APK_SIGNING_BLOCK_SIZE' });
+  });
+
+  it('detects a signing-block magic mismatch between footer and full-block reads', async () => {
+    const apk = await buildApk({ entries: [{ name: 'classes.dex', data: new Uint8Array([1]) }], signers: [{ scheme: 'v2', certificate: await certificate('v2') }] });
+    const source = createBufferSource(apk);
+    const eocd = await findEocd(source);
+    let reads = 0;
+    const inconsistent = {
+      size: source.size,
+      async read(offset: number, length: number) {
+        const value = await source.read(offset, length);
+        reads += 1;
+        if (reads === 2) {
+          const copy = new Uint8Array(value);
+          copy[copy.length - 1] = (copy[copy.length - 1] ?? 0) ^ 0xff;
+          return copy;
+        }
+        return value;
+      },
+    };
+    await expect(readSigningBlock(inconsistent, eocd.centralDirectoryOffset)).rejects.toMatchObject({ code: 'APK_SIGNING_BLOCK_MAGIC' });
+  });
+
   it('recognizes the v2/v3 block identifiers', () => { expect([V2_BLOCK_ID,V3_BLOCK_ID,V31_BLOCK_ID]).toHaveLength(3); expect(V2_BLOCK_ID).not.toBe(V3_BLOCK_ID); });
 
   it('readSigningBlock returns the validated block bytes', async () => {
