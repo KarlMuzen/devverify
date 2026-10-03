@@ -19,6 +19,31 @@ export {
 } from './zip.js';
 
 export {
+  parseDer,
+  readContextSpecific,
+  readInteger,
+  readOid,
+  readSequence,
+  readSet,
+  MAX_DER_DEPTH,
+  isContextSpecific,
+  type DerNode,
+} from './der.js';
+
+export {
+  extractV1Signers,
+  parseV1Signature,
+  MAX_V1_SIGNATURE_BYTES,
+  type V1Signer,
+} from './v1.js';
+
+export {
+  combineSigners,
+  type CombinedSigner,
+  type CombinedSigners,
+} from './signers.js';
+
+export {
   extractApkSigners,
   readSigningBlock,
   APK_SIG_BLOCK_MAGIC,

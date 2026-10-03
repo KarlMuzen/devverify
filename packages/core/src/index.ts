@@ -87,3 +87,13 @@ export {
   type RandomAccessSource,
   type VirtualPatch,
 } from './apk/index.js';
+
+export {
+  extractV1Signers,
+  parseV1Signature,
+  combineSigners,
+  MAX_V1_SIGNATURE_BYTES,
+  type V1Signer,
+  type CombinedSigner,
+  type CombinedSigners,
+} from './apk/index.js';
