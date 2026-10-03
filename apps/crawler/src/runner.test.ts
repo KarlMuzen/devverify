@@ -8,15 +8,9 @@ import {
   QuotaExhaustedError,
   SourceFetchError,
   TransientError,
-  type ApiState,
   type StatusClient,
 } from '@devverify/core';
-import {
-  DEFAULT_BUDGET,
-  runCrawl,
-  writeStepSummary,
-  type CrawlResult,
-} from './runner.js';
+import { runCrawl } from './runner.js';
 
 const SAMPLE_DIR = resolve(process.cwd(), 'fixtures/sample-data');
 const FIXTURE_INDEX = resolve(
@@ -54,24 +48,6 @@ function clientFor(
   check: StatusClient['check'],
 ): StatusClient {
   return { check };
-}
-
-function resultFor(
-  packageName: string,
-  fingerprint: string,
-  state: ApiState,
-): {
-  package: string;
-  fingerprint: string;
-  state: ApiState;
-  rawState: string;
-} {
-  return {
-    package: packageName,
-    fingerprint,
-    state,
-    rawState: state,
-  };
 }
 
 afterEach(async () => {
@@ -130,7 +106,7 @@ describe('runCrawl', () => {
   it('returns 20 for auth failure and leaves the dataset untouched', async () => {
     const dir = await cloneSample();
     const before = await snapshot(dir);
-    const client = clientFor(async () => {
+    const client = clientFor(() => {
       throw new AuthError(401, 'bad credentials');
     });
 
@@ -156,7 +132,7 @@ describe('runCrawl', () => {
     const before = await snapshot(dir);
     const source = {
       id: 'fdroid-signer-index',
-      load: async () => {
+      load: () => {
         throw new SourceFetchError('fixture source failed');
       },
     };
