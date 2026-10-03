@@ -1,5 +1,5 @@
 import type { PackageSource, SourceLoadOptions, SourceSnapshot, SourceValidators } from '../source.js';
-import { SourceFetchError } from '../source.js';
+import { SourceFetchError, SourceFormatError } from '../source.js';
 import { parseSignerIndex } from './signer-index.js';
 
 export const FDROID_SIGNER_INDEX_URL = 'https://f-droid.org/repo/signer-index.json';
@@ -195,7 +195,7 @@ export function createFdroidSource({ url }: FdroidSourceOptions): PackageSource 
       try {
         json = JSON.parse(body) as unknown;
       } catch {
-        throw new SourceFetchError('F-Droid signer-index returned invalid JSON.', 200);
+        throw new SourceFormatError('F-Droid signer-index returned invalid JSON.');
       }
 
       const parsed = parseSignerIndex(json);
