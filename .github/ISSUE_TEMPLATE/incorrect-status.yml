@@ -1,0 +1,45 @@
+name: Incorrect status
+description: Report a tracked package status that appears incorrect.
+title: "status: "
+body:
+  - type: input
+    id: package-name
+    attributes:
+      label: Package name
+      placeholder: com.example.app
+    validations:
+      required: true
+
+  - type: input
+    id: status-shown
+    attributes:
+      label: Status shown
+      placeholder: registered
+    validations:
+      required: true
+
+  - type: input
+    id: expected-status
+    attributes:
+      label: Expected status
+      placeholder: not registered
+    validations:
+      required: true
+
+  - type: input
+    id: evidence-link
+    attributes:
+      label: Evidence link
+      description: Link to public evidence supporting the expected status.
+      placeholder: https://...
+    validations:
+      required: true
+
+  - type: input
+    id: contact
+    attributes:
+      label: Contact (optional)
+      description: Optional public contact method for follow-up.
+      placeholder: https://...
+    validations:
+      required: false

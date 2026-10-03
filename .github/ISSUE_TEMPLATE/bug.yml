@@ -1,0 +1,60 @@
+name: Bug report
+description: Report a reproducible problem in devverify.
+title: "bug: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please provide enough detail to reproduce the problem without sharing secrets or private keys.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+      placeholder: Briefly describe the problem.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Version, commit SHA, or workflow run where the issue occurred.
+      placeholder: v0.0.0 or commit SHA
+    validations:
+      required: false
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Steps, command, fixture, or minimal example.
+      placeholder: |
+        1. Run ...
+        2. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: input
+    id: evidence
+    attributes:
+      label: Evidence link
+      description: Public logs, fixture, or other evidence. Do not include secrets.
+      placeholder: https://...
+    validations:
+      required: false
