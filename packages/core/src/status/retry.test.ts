@@ -26,8 +26,9 @@ describe('retry helpers', () => {
 
   it('delegates transient backoff to the injected sleep', async () => {
     const calls: number[] = [];
-    const sleep = async (ms: number): Promise<void> => {
+    const sleep = (ms: number): Promise<void> => {
       calls.push(ms);
+      return Promise.resolve();
     };
 
     await waitBeforeRetry(2, sleep, () => 0.5);
