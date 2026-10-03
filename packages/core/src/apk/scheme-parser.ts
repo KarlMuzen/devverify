@@ -4,10 +4,12 @@ import {
   MAX_CERTIFICATE_BYTES,
   MAX_CERTIFICATES,
   MAX_SIGNERS,
+} from './signing-limits.js';
+import {
   PROOF_OF_ROTATION_ATTRIBUTE_ID,
   type ApkSigner,
   type ApkSignerScheme,
-} from './signing-block-types.js';
+} from './signing-block.js';
 import { Cursor, readId } from './signing-cursor.js';
 
 export function parseSchemeValue(
