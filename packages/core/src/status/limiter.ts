@@ -1,0 +1,44 @@
+import { DevVerifyError } from '../errors.js';
+
+/** Asynchronous work executed under a concurrency permit. */
+export type LimitTask<T> = () => Promise<T>;
+/** Concurrency-limited task runner. */
+export type Limiter = <T>(task: LimitTask<T>) => Promise<T>;
+
+/** Creates a FIFO promise-based concurrency limiter. */
+export function createLimiter(concurrency: number): Limiter {
+  if (!Number.isSafeInteger(concurrency) || concurrency < 1) {
+    throw new DevVerifyError(
+      'INVALID_CONCURRENCY',
+      'Limiter concurrency must be a positive safe integer.',
+    );
+  }
+
+  let available = concurrency;
+  const waiters: Array<() => void> = [];
+
+  function release(): void {
+    const next = waiters.shift();
+    if (next !== undefined) {
+      next();
+    } else {
+      available += 1;
+    }
+  }
+
+  return async <T>(task: LimitTask<T>): Promise<T> => {
+    if (available > 0) {
+      available -= 1;
+    } else {
+      await new Promise<void>((resolve) => {
+        waiters.push(resolve);
+      });
+    }
+
+    try {
+      return await task();
+    } finally {
+      release();
+    }
+  };
+}
