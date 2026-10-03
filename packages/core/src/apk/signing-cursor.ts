@@ -47,6 +47,10 @@ export class Cursor {
     return this.bytesOf(this.u32(), code);
   }
 
+  public lp64(code = 'APK_SIGNING_BLOCK_FIELD_INVALID'): Uint8Array {
+    return this.bytesOf(this.u64(), code);
+  }
+
   public require(length: number): void {
     if (!Number.isSafeInteger(length) || length < 0 || this.remaining < length) {
       throw new ApkParseError(
