@@ -117,13 +117,9 @@ export function isSpecialError(error: unknown): boolean {
   return specialFailure(error) !== undefined;
 }
 
-export function errorRecord(
-  error: unknown,
-  apiKey?: string,
-): { code: string; message: string } {
+export function errorRecord(error: unknown, apiKey?: string): { code: string; message: string } {
   return safeError(error, apiKey);
 }
-
 
 export function replaceTimeseriesRow(data: MutableCrawlData, now: string): void {
   const row = computeTimeseriesRow(data.apps, new Date(now));
