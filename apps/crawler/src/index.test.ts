@@ -47,7 +47,7 @@ describe('crawler CLI', () => {
   });
 
   it('rejects invalid numeric flags', () => {
-    expect(() => parseCliArgs(['--budget', '-1'])).toThrow(
+    expect(() => parseCliArgs(['--budget=-1'])).toThrow(
       /budget must be a non-negative/,
     );
     expect(() => parseCliArgs(['--concurrency', '0'])).toThrow(
