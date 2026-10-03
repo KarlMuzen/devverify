@@ -82,10 +82,6 @@ function stringPool(values: readonly string[], utf8: boolean): {
   };
 }
 
-function chunk(type: number, body: Uint8Array): Uint8Array {
-  return concat(u16(type), u16(16), u32(16 + body.byteLength), body);
-}
-
 function namespace(type: number, prefix: number, uri: number): Uint8Array {
   const body = concat(u32(1), u32(0xffffffff), u32(prefix), u32(uri));
   return concat(u16(type), u16(16), u32(24), body);
