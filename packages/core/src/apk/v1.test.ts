@@ -68,9 +68,9 @@ describe('APK v1/JAR signatures', () => {
   });
 
   it('rejects a signature file over 1 MiB before parsing', () => {
-    expect(() => parseV1Signature(new Uint8Array(MAX_V1_SIGNATURE_BYTES + 1))).toThrowErrorMatchingObject({
-      code: 'APK_V1_SIGNATURE_LIMIT',
-    });
+    expect(() => parseV1Signature(new Uint8Array(MAX_V1_SIGNATURE_BYTES + 1))).toThrowError(
+      expect.objectContaining({ code: 'APK_V1_SIGNATURE_LIMIT' }),
+    );
   });
 
   it('ignores non-signature META-INF files and supports RSA, DSA, and EC suffixes', async () => {
