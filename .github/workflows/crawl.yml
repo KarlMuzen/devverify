@@ -1,0 +1,154 @@
+name: Crawl
+
+on:
+  schedule:
+    # Run at :17 instead of :00 to avoid the top-of-hour Actions load spike.
+    - cron: '17 8 * * *'
+  workflow_dispatch:
+    inputs:
+      budget:
+        description: 'Maximum Status API requests for this run'
+        required: false
+        default: '950'
+        type: string
+      dry_run:
+        description: 'Run the crawler without writing the data branch'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: crawl
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Checkout data branch
+        uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
+          fetch-depth: 1
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build crawler
+        run: |
+          pnpm --filter @devverify/core build
+          pnpm --filter @devverify/crawler build
+
+      - name: Run crawler
+        env:
+          ANDROID_DEVID_STATUS_API_KEY: ${{ secrets.ANDROID_DEVID_STATUS_API_KEY }}
+          BUDGET: ${{ inputs.budget || '950' }}
+          DRY_RUN: ${{ inputs.dry_run || false }}
+        run: |
+          set -euo pipefail
+          args=(--data-dir data --budget "$BUDGET")
+          if [[ "$DRY_RUN" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          node apps/crawler/dist/index.js "${args[@]}" | tee crawl-result.json
+
+      - name: Commit and push data
+        id: commit
+        env:
+          DEFAULT_COMMITTER_NAME: github-actions[bot]
+          DEFAULT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$(git -C data status --porcelain)" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git -C data config user.name "$DEFAULT_COMMITTER_NAME"
+          git -C data config user.email "$DEFAULT_COMMITTER_EMAIL"
+
+          checks="$(node -e "const fs=require('fs'); const value=JSON.parse(fs.readFileSync('crawl-result.json','utf8')); process.stdout.write(String(value.requestsUsed));")"
+          utc_date="$(date -u +%F)"
+          git -C data add -A
+          git -C data commit -m "data: crawl ${utc_date} (${checks} checks)"
+
+          for attempt in 1 2 3; do
+            if git -C data push origin HEAD:data; then
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            if [[ "$attempt" -eq 3 ]]; then
+              echo "Data push failed after 3 attempts." >&2
+              exit 1
+            fi
+
+            git -C data fetch origin data
+            git -C data pull --rebase origin data
+          done
+
+      - name: Success heartbeat
+        if: ${{ success() }}
+        continue-on-error: true
+        env:
+          HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_URL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$HEALTHCHECK_URL" ]]; then
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 10 "$HEALTHCHECK_URL" >/dev/null
+
+      - name: Report crawl failure
+        if: ${{ failure() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          existing="$(gh issue list             --state all             --limit 20             --search 'in:title "Crawl failed"'             --json number,title             --jq '.[] | select(.title == "Crawl failed") | .number' |
+            head -n 1)"
+
+          body="Scheduled crawl failed. See run: ${run_url}"
+
+          if [[ -n "$existing" ]]; then
+            state="$(gh issue view "$existing" --json state --jq '.state')"
+            if [[ "$state" == "CLOSED" ]]; then
+              gh issue reopen "$existing"
+            fi
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "Crawl failed" --body "$body"
+          fi
+
+    # TODO(task 3.6): enable this job after deploy.yml is created as a
+    # reusable workflow with workflow_call.
+    # deploy:
+    #   needs: crawl
+    #   if: needs.crawl.outputs.changed == 'true'
+    #   permissions:
+    #     contents: read
+    #     pages: write
+    #     id-token: write
+    #   uses: ./.github/workflows/deploy.yml
